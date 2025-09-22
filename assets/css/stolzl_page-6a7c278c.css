@@ -1,0 +1,311 @@
+@font-face {
+    font-family: Stolzl-Bold;
+    src: url(/fonts/stolz/Stolzl-Bold.woff2);
+    font-display: swap
+}
+
+@font-face {
+    font-family: Stolzl-Book;
+    src: url(/fonts/stolz/Stolzl-Book.woff2);
+    font-display: swap
+}
+
+@font-face {
+    font-family: Stolzl-Medium;
+    src: url(/fonts/stolz/Stolzl-Medium.woff2);
+    font-display: swap
+}
+
+@font-face {
+    font-family: Stolzl-Regular;
+    src: url(/fonts/stolz/Stolzl-Regular.woff2);
+    font-display: swap
+}
+
+@font-face {
+    font-family: Stolzl-Light;
+    src: url(/fonts/stolz/Stolzl-Light.woff2);
+    font-display: swap
+}
+
+@font-face {
+    font-family: Stolzl-Thin;
+    src: url(/fonts/stolz/Stolzl-Thin.woff2);
+    font-display: swap
+}
+* {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.stl-bold {
+    font-family: Stolzl-Bold !important
+}
+
+.stl-book {
+    font-family: Stolzl-Book !important
+}
+
+.stl-medium {
+    font-family: Stolzl-Medium !important
+}
+
+.stl-regular {
+    font-family: Stolzl-Regular !important
+}
+
+.stl-light {
+    font-family: Stolzl-Light !important
+}
+
+.stl-thin {
+    font-family: Stolzl-Thin !important
+}
+
+.stolzl-page {
+    font-family: Stolzl-Book;
+    font-style: normal;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+    color: #1a1a1a !important
+}
+
+.stolzl-page .display-1 {
+    font-family: Stolzl-Regular;
+    font-style: normal;
+    font-size: 76px;
+    line-height: 76px
+}
+
+.stolzl-page .display-2 {
+    font-family: Stolzl-Regular;
+    font-style: normal;
+    font-size: 76px;
+    line-height: normal
+}
+
+.stolzl-page .display-3 {
+    font-family: Stolzl-Regular;
+    font-style: normal;
+    font-size: 48px !important;
+    line-height: 58px
+}
+
+.stolzl-page .fs-2 {
+    font-family: Stolzl-Regular;
+    font-size: 32px !important;
+    line-height: 40px
+}
+
+.stolzl-page .fs-3 {
+    font-family: Stolzl-Regular;
+    font-size: 24px !important;
+    line-height: 36px
+}
+
+.stolzl-page .fs-4 {
+    font-family: Stolzl-Regular;
+    font-size: 18px !important;
+    line-height: 28px
+}
+
+.stolzl-page .fs-5 {
+    font-size: 13px !important;
+    line-height: 24px !important
+}
+
+.stolzl-page .text-muted {
+    color: #1a1a1a !important;
+    opacity: .8 !important
+}
+
+.stolzl-page .list-ad-network {
+    flex-wrap: wrap;
+    row-gap: 30px;
+    align-items: center
+}
+
+.stolzl-page .list-ad-network svg {
+    flex: 0 0 31.3333%
+}
+
+.stolzl-page .text-blue {
+    color: #1f00ff !important
+}
+
+.stolzl-page .companies-list svg,
+.stolzl-page .companies-list img {
+    filter: grayscale(1);
+    opacity: .4;
+    width: 100%;
+    height: auto;
+    max-width: 131px;
+    width: 122px
+}
+
+.stolzl-page .companies-list svg:hover,
+.stolzl-page .companies-list img:hover {
+    filter: none;
+    opacity: 1
+}
+
+.stolzl-page #adFormatTabs button,
+.stolzl-page #deviceTabs button,
+.stolzl-page #deviceTabsD button {
+    width: 100%;
+    height: 100%;
+    border: none !important;
+    color: inherit !important;
+    background: none !important
+}
+
+.stolzl-page #adFormatTabs button.active,
+.stolzl-page #deviceTabs button.active,
+.stolzl-page #deviceTabsD button.active {
+    background: white !important
+}
+
+.stolzl-page #adFormatTabsContent video {
+    max-height: 600px
+}
+
+.stolzl-page #formatsCarousel .device-content,
+.stolzl-page #adFormatTabsContent .device-content {
+    display: none;
+    text-align: center !important
+}
+
+.stolzl-page #formatsCarousel .device-content.active,
+.stolzl-page #adFormatTabsContent .device-content.active {
+    display: block
+}
+
+.stolzl-page .border-outline {
+    border: 1px solid #E6E6E6;
+    border-radius: 12px
+}
+
+.stolzl-page .btn-alt {
+    font-size: inherit;
+    color: #fff;
+    border-radius: 8px;
+    width: 200px
+}
+
+.stolzl-page .btn-alt-orange {
+    background: #FF550C !important
+}
+
+.stolzl-page .btn-alt-orange:hover {
+    background: #ff773d !important
+}
+
+.stolzl-page .btn-alt-transparent {
+    border: 1px solid white
+}
+
+.stolzl-page .btn-alt-blue {
+    width: fit-content !important;
+    background: #1f00ff !important
+}
+
+.stolzl-page .btn-alt-blue:hover {
+    background: #4c33ff !important
+}
+
+.stolzl-page .reviews-list-alt {
+    flex-wrap: wrap;
+    column-gap: 12px;
+    row-gap: 12px
+}
+
+.stolzl-page .reviews-list-alt .review-item {
+    flex: 0 0 24%
+}
+
+@media (max-width: 992px) {
+    .stolzl-page {
+        font-size: 16px !important;
+        line-height: 20px !important
+    }
+    .stolzl-page .display-1,
+    .stolzl-page .display-2 {
+        font-size: 48px !important;
+        line-height: 52px !important
+    }
+    .stolzl-page .display-3 {
+        font-size: 40px !important;
+        line-height: 52px !important
+    }
+    .stolzl-page .btn-alt {
+        width: 100% !important
+    }
+    .stolzl-page .bg-fix-height {
+        height: 697px
+    }
+    .stolzl-page .companies-list .companies-list-wrapper {
+        overflow-x: scroll !important
+    }
+    .stolzl-page .card-list .card2 {
+        width: 94px
+    }
+    .stolzl-page .card-list {
+        height: 510px
+    }
+    .stolzl-page .card-list-wrapper {
+        max-height: 470px !important
+    }
+    .stolzl-page .reviews-list-alt .review-item {
+        flex: 0 0 30%
+    }
+    .stolzl-page #formatsCarousel .device-content.mobile {
+        margin-bottom: 20px
+    }
+    .stolzl-page #formatsCarousel video {
+        max-height: 353px
+    }
+}
+
+@media (max-width: 768px) {
+    .stolzl-page .reviews-list-alt .review-item {
+        flex: 0 0 48%
+    }
+}
+
+@media (max-width: 576px) {
+    .stolzl-page .reviews-list-alt .review-item {
+        flex: 0 0 100% !important
+    }
+    .stolzl-page .fix-aspect {
+        position: relative !important;
+        padding-top: 100%
+    }
+    .stolzl-page .fix-aspect #globe-container-mob {
+        position: absolute;
+        top: 0
+    }
+}
+
+@keyframes move-left {
+    0% {
+        transform: translate(0) rotate(0)
+    }
+    50% {
+        transform: translate(-20px, 20px) rotate(-20deg)
+    }
+    to {
+        transform: translate(0) rotate(0)
+    }
+}
+
+@keyframes move-right {
+    0% {
+        transform: translate(0) rotate(0)
+    }
+    50% {
+        transform: translate(20px, -20px) rotate(-20deg)
+    }
+    to {
+        transform: translate(0) rotate(0)
+    }
+}
