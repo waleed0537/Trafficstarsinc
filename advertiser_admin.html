@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
     <title>Advertiser Dashboard - TrafficStars</title>
     
     <!-- Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
@@ -19,413 +17,413 @@
             box-sizing: border-box;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
+
         /* ==========================================================================
-   MOBILE RESPONSIVE ENHANCEMENTS
-   Add this CSS to both advertiser_admin.html and publisher_admin.html
-   ========================================================================== */
+           MOBILE RESPONSIVE ENHANCEMENTS
+           ========================================================================== */
 
-/* Mobile Navigation Toggle */
-.mobile-menu-toggle {
-    display: none;
-    background: none;
-    border: none;
-    font-size: 24px;
-    color: #171C6B;
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
+        /* Mobile Navigation Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #171C6B;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
 
-.mobile-menu-toggle:hover {
-    background: rgba(23, 28, 107, 0.1);
-}
+        .mobile-menu-toggle:hover {
+            background: rgba(23, 28, 107, 0.1);
+        }
 
-.mobile-nav-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 2000;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
+        .mobile-nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
 
-.mobile-nav-overlay.active {
-    opacity: 1;
-    visibility: visible;
-}
+        .mobile-nav-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
 
-.mobile-nav-menu {
-    position: fixed;
-    top: 0;
-    right: -100%;
-    width: 280px;
-    height: 100vh;
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(20px);
-    z-index: 2001;
-    padding: 80px 24px 24px;
-    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow-y: auto;
-}
+        .mobile-nav-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 280px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            z-index: 2001;
+            padding: 80px 24px 24px;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+        }
 
-.mobile-nav-menu.active {
-    right: 0;
-}
+        .mobile-nav-menu.active {
+            right: 0;
+        }
 
-.mobile-nav-close {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: none;
-    border: none;
-    font-size: 24px;
-    color: #171C6B;
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
+        .mobile-nav-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #171C6B;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
 
-.mobile-nav-close:hover {
-    background: rgba(23, 28, 107, 0.1);
-}
+        .mobile-nav-close:hover {
+            background: rgba(23, 28, 107, 0.1);
+        }
 
-.mobile-nav-item {
-    display: block;
-    padding: 16px 0;
-    font-size: 18px;
-    font-weight: 600;
-    color: #171C6B;
-    text-decoration: none;
-    border-bottom: 1px solid rgba(23, 28, 107, 0.1);
-    transition: all 0.3s ease;
-}
+        .mobile-nav-item {
+            display: block;
+            padding: 16px 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #171C6B;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(23, 28, 107, 0.1);
+            transition: all 0.3s ease;
+        }
 
-.mobile-nav-item:hover {
-    color: #2d4ef5;
-    padding-left: 8px;
-}
+        .mobile-nav-item:hover {
+            color: #2d4ef5;
+            padding-left: 8px;
+        }
 
-.mobile-nav-item.active {
-    color: #2d4ef5;
-    background: linear-gradient(90deg, rgba(45, 78, 245, 0.1) 0%, transparent 100%);
-    margin: 0 -24px;
-    padding: 16px 32px 16px 24px;
-    border-radius: 12px;
-}
+        .mobile-nav-item.active {
+            color: #2d4ef5;
+            background: linear-gradient(90deg, rgba(45, 78, 245, 0.1) 0%, transparent 100%);
+            margin: 0 -24px;
+            padding: 16px 32px 16px 24px;
+            border-radius: 12px;
+        }
 
-/* Enhanced Mobile Header */
-@media (max-width: 1024px) {
-    .nav-tabs {
-        display: none;
-    }
-    
-    .mobile-menu-toggle {
-        display: block;
-    }
-    
-    .header-content {
-        padding: 0 20px;
-    }
-    
-    .user-section {
-        gap: 16px;
-    }
-    
-    .balance, .earnings {
-        padding: 8px 12px;
-        font-size: 13px;
-    }
-    
-    .user-dropdown {
-        padding: 6px 12px;
-    }
-    
-    .user-name {
-        display: none;
-    }
-}
+        /* Enhanced Mobile Header */
+        @media (max-width: 1024px) {
+            .nav-tabs {
+                display: none;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .header-content {
+                padding: 0 20px;
+            }
+            
+            .user-section {
+                gap: 16px;
+            }
+            
+            .balance, .earnings {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            
+            .user-dropdown {
+                padding: 6px 12px;
+            }
+            
+            .user-name {
+                display: none;
+            }
+        }
 
-/* Mobile Typography Scaling */
-@media (max-width: 768px) {
-    .welcome-title {
-        font-size: 28px !important;
-        line-height: 1.2;
-    }
-    
-    .section-title {
-        font-size: 24px !important;
-        margin-bottom: 16px;
-    }
-    
-    .section-subtitle {
-        font-size: 16px !important;
-        line-height: 1.5;
-    }
-    
-    .step-title {
-        font-size: 18px !important;
-        line-height: 1.3;
-    }
-    
-    .content-title {
-        font-size: 18px !important;
-    }
-    
-    .welcome-description {
-        font-size: 16px !important;
-        line-height: 1.5;
-    }
-}
+        /* Mobile Typography Scaling */
+        @media (max-width: 768px) {
+            .welcome-title {
+                font-size: 28px !important;
+                line-height: 1.2;
+            }
+            
+            .section-title {
+                font-size: 24px !important;
+                margin-bottom: 16px;
+            }
+            
+            .section-subtitle {
+                font-size: 16px !important;
+                line-height: 1.5;
+            }
+            
+            .step-title {
+                font-size: 18px !important;
+                line-height: 1.3;
+            }
+            
+            .content-title {
+                font-size: 18px !important;
+            }
+            
+            .welcome-description {
+                font-size: 16px !important;
+                line-height: 1.5;
+            }
+        }
 
-/* Mobile Layout Optimizations */
-@media (max-width: 768px) {
-    .main-content {
-        padding: 20px 16px !important;
-    }
-    
-    .hero-section {
-        grid-template-columns: 1fr !important;
-        gap: 20px !important;
-        margin-bottom: 32px !important;
-    }
-    
-    .welcome-card {
-        padding: 32px 24px !important;
-        border-radius: 20px !important;
-    }
-    
-    .stats-panel {
-        padding: 24px 20px !important;
-        border-radius: 20px !important;
-    }
-    
-    .section-header {
-        margin-bottom: 32px !important;
-        padding: 0 8px;
-    }
-    
-    .steps-grid {
-        grid-template-columns: 1fr !important;
-        gap: 16px !important;
-    }
-    
-    .step-card {
-        padding: 24px 20px !important;
-        border-radius: 20px !important;
-    }
-    
-    .content-grid {
-        grid-template-columns: 1fr !important;
-        gap: 20px !important;
-    }
-    
-    .content-card {
-        padding: 24px 20px !important;
-        border-radius: 20px !important;
-    }
-}
+        /* Mobile Layout Optimizations */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 20px 16px !important;
+            }
+            
+            .hero-section {
+                grid-template-columns: 1fr !important;
+                gap: 20px !important;
+                margin-bottom: 32px !important;
+            }
+            
+            .welcome-card {
+                padding: 32px 24px !important;
+                border-radius: 20px !important;
+            }
+            
+            .stats-panel {
+                padding: 24px 20px !important;
+                border-radius: 20px !important;
+            }
+            
+            .section-header {
+                margin-bottom: 32px !important;
+                padding: 0 8px;
+            }
+            
+            .steps-grid {
+                grid-template-columns: 1fr !important;
+                gap: 16px !important;
+            }
+            
+            .step-card {
+                padding: 24px 20px !important;
+                border-radius: 20px !important;
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr !important;
+                gap: 20px !important;
+            }
+            
+            .content-card {
+                padding: 24px 20px !important;
+                border-radius: 20px !important;
+            }
+        }
 
-/* Mobile Interactive Elements */
-@media (max-width: 768px) {
-    .primary-btn {
-        width: 100%;
-        padding: 14px 24px !important;
-        font-size: 15px !important;
-    }
-    
-    .step-btn {
-        padding: 12px 20px !important;
-        font-size: 14px !important;
-    }
-    
-    .stat-item {
-        padding: 16px 0 !important;
-    }
-    
-    .stat-value {
-        font-size: 18px !important;
-    }
-    
-    .faq-item, .news-item {
-        padding: 16px 0 !important;
-    }
-    
-    .faq-item:hover, .stat-item:hover {
-        margin: 0 -12px !important;
-        padding: 16px 12px !important;
-    }
-}
+        /* Mobile Interactive Elements */
+        @media (max-width: 768px) {
+            .primary-btn {
+                width: 100%;
+                padding: 14px 24px !important;
+                font-size: 15px !important;
+            }
+            
+            .step-btn {
+                padding: 12px 20px !important;
+                font-size: 14px !important;
+            }
+            
+            .stat-item {
+                padding: 16px 0 !important;
+            }
+            
+            .stat-value {
+                font-size: 18px !important;
+            }
+            
+            .faq-item, .news-item {
+                padding: 16px 0 !important;
+            }
+            
+            .faq-item:hover, .stat-item:hover {
+                margin: 0 -12px !important;
+                padding: 16px 12px !important;
+            }
+        }
 
-/* Small Mobile (320px - 480px) */
-@media (max-width: 480px) {
-    .header-content {
-        padding: 0 16px !important;
-        height: 60px !important;
-    }
-    
-    .logo {
-        width: 32px !important;
-        height: 32px !important;
-        font-size: 16px !important;
-    }
-    
-    .brand-name {
-        font-size: 18px !important;
-    }
-    
-    .balance, .earnings {
-        font-size: 12px !important;
-        padding: 6px 10px !important;
-    }
-    
-    .user-avatar {
-        width: 32px !important;
-        height: 32px !important;
-        font-size: 14px !important;
-    }
-    
-    .main-content {
-        padding: 16px 12px !important;
-    }
-    
-    .welcome-card {
-        padding: 24px 16px !important;
-    }
-    
-    .stats-panel {
-        padding: 20px 16px !important;
-    }
-    
-    .step-card, .content-card {
-        padding: 20px 16px !important;
-    }
-    
-    .welcome-title {
-        font-size: 24px !important;
-    }
-    
-    .section-title {
-        font-size: 20px !important;
-    }
-    
-    .step-number {
-        width: 28px !important;
-        height: 28px !important;
-        font-size: 12px !important;
-    }
-}
+        /* Small Mobile (320px - 480px) */
+        @media (max-width: 480px) {
+            .header-content {
+                padding: 0 16px !important;
+                height: 60px !important;
+            }
+            
+            .logo {
+                width: 32px !important;
+                height: 32px !important;
+                font-size: 16px !important;
+            }
+            
+            .brand-name {
+                font-size: 18px !important;
+            }
+            
+            .balance, .earnings {
+                font-size: 12px !important;
+                padding: 6px 10px !important;
+            }
+            
+            .user-avatar {
+                width: 32px !important;
+                height: 32px !important;
+                font-size: 14px !important;
+            }
+            
+            .main-content {
+                padding: 16px 12px !important;
+            }
+            
+            .welcome-card {
+                padding: 24px 16px !important;
+            }
+            
+            .stats-panel {
+                padding: 20px 16px !important;
+            }
+            
+            .step-card, .content-card {
+                padding: 20px 16px !important;
+            }
+            
+            .welcome-title {
+                font-size: 24px !important;
+            }
+            
+            .section-title {
+                font-size: 20px !important;
+            }
+            
+            .step-number {
+                width: 28px !important;
+                height: 28px !important;
+                font-size: 12px !important;
+            }
+        }
 
-/* Touch Optimizations */
-@media (hover: none) and (pointer: coarse) {
-    .step-card:hover,
-    .faq-item:hover,
-    .stat-item:hover,
-    .news-item:hover {
-        transform: none !important;
-        background: none !important;
-        margin: 0 !important;
-        padding: 16px 0 !important;
-    }
-    
-    .step-card:hover::before {
-        opacity: 0 !important;
-    }
-    
-    .primary-btn:hover,
-    .step-btn:hover {
-        transform: none !important;
-        box-shadow: 0 8px 24px rgba(23, 28, 107, 0.25) !important;
-    }
-}
+        /* Touch Optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            .step-card:hover,
+            .faq-item:hover,
+            .stat-item:hover,
+            .news-item:hover {
+                transform: none !important;
+                background: none !important;
+                margin: 0 !important;
+                padding: 16px 0 !important;
+            }
+            
+            .step-card:hover::before {
+                opacity: 0 !important;
+            }
+            
+            .primary-btn:hover,
+            .step-btn:hover {
+                transform: none !important;
+                box-shadow: 0 8px 24px rgba(23, 28, 107, 0.25) !important;
+            }
+        }
 
-/* Active/Focus States for Mobile */
-@media (max-width: 768px) {
-    .step-card:active {
-        transform: scale(0.98);
-        transition: transform 0.1s ease;
-    }
-    
-    .primary-btn:active,
-    .step-btn:active {
-        transform: scale(0.96);
-        transition: transform 0.1s ease;
-    }
-    
-    .faq-item:active {
-        background: rgba(23, 28, 107, 0.05);
-        border-radius: 8px;
-        margin: 0 -12px;
-        padding: 16px 12px;
-    }
-}
+        /* Active/Focus States for Mobile */
+        @media (max-width: 768px) {
+            .step-card:active {
+                transform: scale(0.98);
+                transition: transform 0.1s ease;
+            }
+            
+            .primary-btn:active,
+            .step-btn:active {
+                transform: scale(0.96);
+                transition: transform 0.1s ease;
+            }
+            
+            .faq-item:active {
+                background: rgba(23, 28, 107, 0.05);
+                border-radius: 8px;
+                margin: 0 -12px;
+                padding: 16px 12px;
+            }
+        }
 
-/* Mobile Animation Refinements */
-@media (max-width: 768px) {
-    .animate-in {
-        animation-duration: 0.4s !important;
-    }
-    
-    .welcome-card::before {
-        width: 200px !important;
-        height: 200px !important;
-        transform: translate(50%, -50%) !important;
-    }
-}
+        /* Mobile Animation Refinements */
+        @media (max-width: 768px) {
+            .animate-in {
+                animation-duration: 0.4s !important;
+            }
+            
+            .welcome-card::before {
+                width: 200px !important;
+                height: 200px !important;
+                transform: translate(50%, -50%) !important;
+            }
+        }
 
-/* Landscape Mobile Optimization */
-@media (max-width: 926px) and (orientation: landscape) {
-    .header {
-        position: relative !important;
-    }
-    
-    .main-content {
-        padding-top: 16px !important;
-    }
-    
-    .welcome-card {
-        padding: 24px 20px !important;
-    }
-    
-    .hero-section {
-        grid-template-columns: 1.5fr 1fr !important;
-    }
-    
-    .steps-grid {
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
-    }
-}
+        /* Landscape Mobile Optimization */
+        @media (max-width: 926px) and (orientation: landscape) {
+            .header {
+                position: relative !important;
+            }
+            
+            .main-content {
+                padding-top: 16px !important;
+            }
+            
+            .welcome-card {
+                padding: 24px 20px !important;
+            }
+            
+            .hero-section {
+                grid-template-columns: 1.5fr 1fr !important;
+            }
+            
+            .steps-grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+            }
+        }
 
-/* High DPI/Retina Display Optimizations */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    .logo, .user-avatar, .step-number {
-        image-rendering: -webkit-optimize-contrast;
-        image-rendering: crisp-edges;
-    }
-}
+        /* High DPI/Retina Display Optimizations */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .logo, .user-avatar, .step-number {
+                image-rendering: -webkit-optimize-contrast;
+                image-rendering: crisp-edges;
+            }
+        }
 
-/* Dark Mode Support for Mobile */
-@media (prefers-color-scheme: dark) and (max-width: 768px) {
-    .mobile-nav-menu {
-        background: rgba(26, 26, 26, 0.98);
-        border-left: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .mobile-nav-item {
-        color: #e2e8f0;
-        border-bottom-color: rgba(255, 255, 255, 0.1);
-    }
-    
-    .mobile-nav-close,
-    .mobile-menu-toggle {
-        color: #e2e8f0;
-    }
-}
+        /* Dark Mode Support for Mobile */
+        @media (prefers-color-scheme: dark) and (max-width: 768px) {
+            .mobile-nav-menu {
+                background: rgba(26, 26, 26, 0.98);
+                border-left: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .mobile-nav-item {
+                color: #e2e8f0;
+                border-bottom-color: rgba(255, 255, 255, 0.1);
+            }
+            
+            .mobile-nav-close,
+            .mobile-menu-toggle {
+                color: #e2e8f0;
+            }
+        }
 
         body {
             background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);
@@ -941,6 +939,386 @@
             font-weight: 500;
         }
 
+        /* Campaign Creation Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .campaign-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 32px 80px rgba(23, 28, 107, 0.3);
+            z-index: 2001;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-overlay.active .campaign-modal {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .modal-header {
+            padding: 32px 32px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #64748b;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(23, 28, 107, 0.1);
+            color: #171C6B;
+        }
+
+        .modal-title {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #171C6B 0%, #2d4ef5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .modal-subtitle {
+            font-size: 16px;
+            color: #64748b;
+            margin-bottom: 32px;
+        }
+
+        .modal-content {
+            padding: 0 32px 32px;
+        }
+
+        .form-section {
+            margin-bottom: 32px;
+        }
+
+        .section-title-modal {
+            font-size: 18px;
+            font-weight: 700;
+            color: #171C6B;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #171C6B 0%, #2d4ef5 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #171C6B;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid rgba(23, 28, 107, 0.1);
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #1a1a1a;
+            background: rgba(248, 250, 255, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #2d4ef5;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(45, 78, 245, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+            background-position: right 16px center;
+            background-repeat: no-repeat;
+            background-size: 20px;
+        }
+
+        /* Traffic Selector */
+        .traffic-packages {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .traffic-package {
+            padding: 24px 20px;
+            border: 2px solid rgba(23, 28, 107, 0.1);
+            border-radius: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(248, 250, 255, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .traffic-package:hover {
+            border-color: rgba(45, 78, 245, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(23, 28, 107, 0.1);
+        }
+
+        .traffic-package.selected {
+            border-color: #2d4ef5;
+            background: linear-gradient(135deg, rgba(45, 78, 245, 0.1) 0%, rgba(45, 78, 245, 0.05) 100%);
+        }
+
+        .traffic-package.popular::before {
+            content: 'Most Popular';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            background: linear-gradient(135deg, #2d4ef5 0%, #171C6B 100%);
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px;
+            text-align: center;
+            border-radius: 14px 14px 0 0;
+        }
+
+        .traffic-package.popular {
+            border-color: #2d4ef5;
+            margin-top: 20px;
+        }
+
+        .package-amount {
+            font-size: 24px;
+            font-weight: 800;
+            color: #171C6B;
+            margin-bottom: 8px;
+        }
+
+        .package-price {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .package-cpm {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 16px;
+        }
+
+        .package-features {
+            text-align: left;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .package-feature {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .feature-check {
+            color: #059669;
+            font-weight: bold;
+        }
+
+        /* Custom Traffic Input */
+        .custom-traffic {
+            display: none;
+            margin-top: 24px;
+            padding: 24px;
+            border: 2px dashed rgba(23, 28, 107, 0.2);
+            border-radius: 16px;
+            background: rgba(248, 250, 255, 0.3);
+        }
+
+        .custom-traffic.active {
+            display: block;
+        }
+
+        .traffic-calculator {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 16px;
+            align-items: end;
+            margin-bottom: 16px;
+        }
+
+        .calc-result {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+            padding: 16px 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .calc-label {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .calc-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: #059669;
+        }
+
+        /* Campaign Summary */
+        .campaign-summary {
+            background: linear-gradient(135deg, rgba(23, 28, 107, 0.05) 0%, rgba(45, 78, 245, 0.03) 100%);
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(23, 28, 107, 0.1);
+        }
+
+        .summary-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #171C6B;
+            margin-bottom: 16px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(23, 28, 107, 0.06);
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: 18px;
+            color: #171C6B;
+            margin-top: 8px;
+        }
+
+        .summary-label {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .summary-value {
+            color: #171C6B;
+            font-weight: 600;
+        }
+
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: flex-end;
+            margin-top: 32px;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #64748b;
+            padding: 16px 24px;
+            border: 2px solid rgba(23, 28, 107, 0.1);
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(23, 28, 107, 0.05);
+            color: #171C6B;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #171C6B 0%, #2d4ef5 100%);
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(23, 28, 107, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(23, 28, 107, 0.35);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         /* Responsive Design */
         @media (max-width: 1200px) {
             .hero-section {
@@ -976,6 +1354,32 @@
             
             .content-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .campaign-modal {
+                width: 95%;
+                max-height: 95vh;
+            }
+
+            .modal-header {
+                padding: 24px 20px 0;
+            }
+
+            .modal-content {
+                padding: 0 20px 24px;
+            }
+
+            .traffic-packages {
+                grid-template-columns: 1fr;
+            }
+
+            .traffic-calculator {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .form-actions {
+                flex-direction: column;
             }
         }
 
@@ -1042,7 +1446,7 @@
                         Ready to scale your advertising campaigns? Access powerful tools, detailed analytics, 
                         and premium inventory to maximize your ROI.
                     </p>
-                    <button class="primary-btn" onclick="createCampaign()">
+                    <button class="primary-btn" onclick="openCampaignModal()">
                         Launch New Campaign
                     </button>
                 </div>
@@ -1107,7 +1511,7 @@
                     <p class="step-description">
                         Create your first advertising campaign with our advanced targeting options and premium inventory across multiple formats.
                     </p>
-                    <button class="step-btn" onclick="createCampaign()">Create Campaign</button>
+                    <button class="step-btn" onclick="openCampaignModal()">Create Campaign</button>
                 </div>
             </div>
         </section>
@@ -1162,9 +1566,301 @@
         </section>
     </main>
 
+    <!-- Campaign Creation Modal -->
+    <div class="modal-overlay" id="campaignModal">
+        <div class="campaign-modal">
+            <div class="modal-header">
+                <button class="modal-close" onclick="closeCampaignModal()">×</button>
+                <h2 class="modal-title">Create New Campaign</h2>
+                <p class="modal-subtitle">Set up your advertising campaign in just a few simple steps</p>
+            </div>
+            
+            <div class="modal-content">
+                <form id="campaignForm">
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <h3 class="section-title-modal">
+                            <span class="section-icon">📋</span>
+                            Campaign Details
+                        </h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Campaign Name *</label>
+                            <input type="text" class="form-input" name="campaignName" placeholder="Enter campaign name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Landing Page URL *</label>
+                            <input type="url" class="form-input" name="landingUrl" placeholder="https://example.com" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Campaign Type *</label>
+                            <select class="form-input form-select" name="campaignType" required>
+                                <option value="">Select campaign type</option>
+                                <option value="cpc">CPC - Cost Per Click</option>
+                                <option value="cpm">CPM - Cost Per Mille</option>
+                                <option value="cpa">CPA - Cost Per Action</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Campaign Description</label>
+                            <textarea class="form-input form-textarea" name="description" placeholder="Describe your campaign objectives..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Traffic Selection -->
+                    <div class="form-section">
+                        <h3 class="section-title-modal">
+                            <span class="section-icon">🚀</span>
+                            Select Traffic Package
+                        </h3>
+                        
+                        <div class="traffic-packages">
+                            <div class="traffic-package" data-amount="10000" data-price="150" onclick="selectPackage(this)">
+                                <div class="package-amount">10K</div>
+                                <div class="package-price">$150</div>
+                                <div class="package-cpm">$15.00 CPM</div>
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <span class="feature-check">✓</span>
+                                        <span>Basic targeting</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <span class="feature-check">✓</span>
+                                        <span>Mobile & Desktop</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="traffic-package popular" data-amount="50000" data-price="650" onclick="selectPackage(this)">
+                                <div class="package-amount">50K</div>
+                                <div class="package-price">$650</div>
+                                <div class="package-cpm">$13.00 CPM</div>
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <span class="feature-check">✓</span>
+                                        <span>Advanced targeting</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <span class="feature-check">✓</span>
+                                        <span>Priority support</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="traffic-package" data-amount="100000" data-price="1200" onclick="selectPackage(this)">
+                                <div class="package-amount">100K</div>
+                                <div class="package-price">$1,200</div>
+                                <div class="package-cpm">$12.00 CPM</div>
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <span class="feature-check">✓</span>
+                                        <span>Premium targeting</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <span class="feature-check">✓</span>
+                                        <span>Dedicated manager</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="traffic-package" data-amount="custom" data-price="0" onclick="selectPackage(this)">
+                                <div class="package-amount">Custom</div>
+                                <div class="package-price">Custom</div>
+                                <div class="package-cpm">Flexible CPM</div>
+                                <div class="package-features">
+                                    <div class="package-feature">
+                                        <span class="feature-check">✓</span>
+                                        <span>Custom solution</span>
+                                    </div>
+                                    <div class="package-feature">
+                                        <span class="feature-check">✓</span>
+                                        <span>Enterprise support</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Custom Traffic Input -->
+                        <div class="custom-traffic" id="customTrafficSection">
+                            <div class="traffic-calculator">
+                                <div class="form-group">
+                                    <label class="form-label">Traffic Amount</label>
+                                    <input type="number" class="form-input" id="customAmount" placeholder="Enter impressions" oninput="calculateCustomPrice()">
+                                </div>
+                                <div style="text-align: center; color: #64748b; font-size: 24px;">×</div>
+                                <div class="calc-result">
+                                    <div class="calc-label">Estimated Cost</div>
+                                    <div class="calc-value" id="customPrice">$0</div>
+                                </div>
+                            </div>
+                            <p style="font-size: 14px; color: #64748b; text-align: center;">
+                                Base CPM: $12.00 (may vary based on targeting options)
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Targeting Options -->
+                    <div class="form-section">
+                        <h3 class="section-title-modal">
+                            <span class="section-icon">🎯</span>
+                            Targeting Options
+                        </h3>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div class="form-group">
+                                <label class="form-label">Target Countries</label>
+                                <select class="form-input form-select" name="targetCountries">
+                                    <option value="">All Countries</option>
+                                    <option value="us">United States</option>
+                                    <option value="uk">United Kingdom</option>
+                                    <option value="ca">Canada</option>
+                                    <option value="au">Australia</option>
+                                    <option value="de">Germany</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Device Type</label>
+                                <select class="form-input form-select" name="deviceType">
+                                    <option value="all">All Devices</option>
+                                    <option value="mobile">Mobile Only</option>
+                                    <option value="desktop">Desktop Only</option>
+                                    <option value="tablet">Tablet Only</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Campaign Duration</label>
+                            <select class="form-input form-select" name="campaignDuration">
+                                <option value="7">7 Days</option>
+                                <option value="14">14 Days</option>
+                                <option value="30" selected>30 Days</option>
+                                <option value="60">60 Days</option>
+                                <option value="custom">Custom Duration</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Campaign Summary -->
+                    <div class="campaign-summary">
+                        <h3 class="summary-title">Campaign Summary</h3>
+                        <div class="summary-row">
+                            <span class="summary-label">Selected Package:</span>
+                            <span class="summary-value" id="summaryPackage">Please select a package</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Traffic Amount:</span>
+                            <span class="summary-value" id="summaryAmount">0 impressions</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Campaign Duration:</span>
+                            <span class="summary-value">30 days</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Total Investment:</span>
+                            <span class="summary-value" id="summaryTotal">$0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeCampaignModal()">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn-primary" disabled id="submitBtn">
+                            Create Campaign
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
-        function createCampaign() {
-            alert('🚀 Campaign Builder\n\nLaunch your advertising campaign with:\n• Advanced targeting options\n• Multiple ad formats\n• Real-time optimization\n• Detailed analytics');
+        let selectedPackage = null;
+
+        function openCampaignModal() {
+            document.getElementById('campaignModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCampaignModal() {
+            document.getElementById('campaignModal').classList.remove('active');
+            document.body.style.overflow = '';
+            // Reset form
+            document.getElementById('campaignForm').reset();
+            selectedPackage = null;
+            document.querySelectorAll('.traffic-package').forEach(pkg => pkg.classList.remove('selected'));
+            document.getElementById('customTrafficSection').classList.remove('active');
+            updateSummary();
+        }
+
+        function selectPackage(element) {
+            // Remove previous selection
+            document.querySelectorAll('.traffic-package').forEach(pkg => pkg.classList.remove('selected'));
+            
+            // Select current package
+            element.classList.add('selected');
+            
+            const amount = element.dataset.amount;
+            const price = element.dataset.price;
+            
+            selectedPackage = { amount, price };
+            
+            // Show/hide custom traffic section
+            const customSection = document.getElementById('customTrafficSection');
+            if (amount === 'custom') {
+                customSection.classList.add('active');
+            } else {
+                customSection.classList.remove('active');
+            }
+            
+            updateSummary();
+        }
+
+        function calculateCustomPrice() {
+            const amount = document.getElementById('customAmount').value;
+            const baseCPM = 12.00;
+            const price = amount ? ((amount / 1000) * baseCPM).toFixed(2) : '0';
+            
+            document.getElementById('customPrice').textContent = `$${price}`;
+            
+            if (selectedPackage && selectedPackage.amount === 'custom') {
+                selectedPackage.price = price;
+                selectedPackage.customAmount = amount;
+                updateSummary();
+            }
+        }
+
+        function updateSummary() {
+            const summaryPackage = document.getElementById('summaryPackage');
+            const summaryAmount = document.getElementById('summaryAmount');
+            const summaryTotal = document.getElementById('summaryTotal');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (selectedPackage) {
+                if (selectedPackage.amount === 'custom') {
+                    const customAmount = selectedPackage.customAmount || 0;
+                    summaryPackage.textContent = 'Custom Package';
+                    summaryAmount.textContent = `${parseInt(customAmount).toLocaleString()} impressions`;
+                    summaryTotal.textContent = `$${selectedPackage.price}`;
+                } else {
+                    summaryPackage.textContent = `${selectedPackage.amount} Package`;
+                    summaryAmount.textContent = `${parseInt(selectedPackage.amount).toLocaleString()} impressions`;
+                    summaryTotal.textContent = `$${selectedPackage.price}`;
+                }
+                
+                submitBtn.disabled = false;
+            } else {
+                summaryPackage.textContent = 'Please select a package';
+                summaryAmount.textContent = '0 impressions';
+                summaryTotal.textContent = '$0.00';
+                submitBtn.disabled = true;
+            }
         }
 
         function fillProfile() {
@@ -1179,6 +1875,44 @@
             const question = element.querySelector('.faq-question').textContent;
             alert(`📚 Knowledge Base\n\n"${question}"\n\nThis would open comprehensive guides, tutorials, and best practices for this topic.`);
         }
+
+        // Form submission
+        document.getElementById('campaignForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!selectedPackage) {
+                alert('Please select a traffic package');
+                return;
+            }
+            
+            // Collect form data
+            const formData = new FormData(this);
+            const campaignData = {
+                name: formData.get('campaignName'),
+                url: formData.get('landingUrl'),
+                type: formData.get('campaignType'),
+                package: selectedPackage,
+                description: formData.get('description'),
+                targetCountries: formData.get('targetCountries'),
+                deviceType: formData.get('deviceType'),
+                duration: formData.get('campaignDuration')
+            };
+            
+            // Validate required fields
+            if (!campaignData.name || !campaignData.url || !campaignData.type) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            // Simulate campaign creation
+            const trafficAmount = selectedPackage.amount === 'custom' ? 
+                parseInt(selectedPackage.customAmount).toLocaleString() : 
+                parseInt(selectedPackage.amount).toLocaleString();
+            
+            alert(`🚀 Campaign Created Successfully!\n\nCampaign: ${campaignData.name}\nTraffic: ${trafficAmount} impressions\nInvestment: $${selectedPackage.price}\nDuration: ${campaignData.duration} days\n\nYour campaign will be reviewed and activated within 24 hours.`);
+            
+            closeCampaignModal();
+        });
 
         // Enhanced Navigation
         document.querySelectorAll('.nav-tab').forEach(tab => {
@@ -1202,319 +1936,147 @@
                 }, index * 150);
             });
         });
-        /* ==========================================================================
-   MOBILE JAVASCRIPT FUNCTIONALITY
-   Add this JavaScript to both advertiser_admin.html and publisher_admin.html
-   ========================================================================== */
 
-// Mobile Navigation System
-function initMobileNavigation() {
-    // Create mobile menu elements
-    const header = document.querySelector('.header-content');
-    const userSection = document.querySelector('.user-section');
-    
-    // Add mobile toggle button
-    const mobileToggle = document.createElement('button');
-    mobileToggle.className = 'mobile-menu-toggle';
-    mobileToggle.innerHTML = '☰';
-    mobileToggle.setAttribute('aria-label', 'Toggle mobile menu');
-    
-    // Insert toggle before user section
-    userSection.parentNode.insertBefore(mobileToggle, userSection);
-    
-    // Create mobile overlay and menu
-    const mobileOverlay = document.createElement('div');
-    mobileOverlay.className = 'mobile-nav-overlay';
-    
-    const mobileMenu = document.createElement('div');
-    mobileMenu.className = 'mobile-nav-menu';
-    
-    const closeButton = document.createElement('button');
-    closeButton.className = 'mobile-nav-close';
-    closeButton.innerHTML = '×';
-    closeButton.setAttribute('aria-label', 'Close mobile menu');
-    
-    // Get navigation items (different for advertiser vs publisher)
-    const navTabs = document.querySelectorAll('.nav-tab');
-    let menuHTML = '';
-    
-    // Determine if this is advertiser or publisher based on nav items
-    const isPublisher = document.querySelector('.earnings') !== null;
-    
-    if (isPublisher) {
-        // Publisher navigation
-        const publisherNavs = [
-            { text: 'Dashboard', active: true },
-            { text: 'Add Placement' },
-            { text: 'My Sites' },
-            { text: 'Analytics' },
-            { text: 'Payouts' },
-            { text: 'Settings' }
-        ];
-        
-        publisherNavs.forEach(nav => {
-            menuHTML += `<a href="#" class="mobile-nav-item ${nav.active ? 'active' : ''}">${nav.text}</a>`;
-        });
-    } else {
-        // Advertiser navigation  
-        const advertiserNavs = [
-            { text: 'Dashboard', active: true },
-            { text: 'Create Campaign' },
-            { text: 'My Campaigns' },
-            { text: 'Analytics' },
-            { text: 'Settings' }
-        ];
-        
-        advertiserNavs.forEach(nav => {
-            menuHTML += `<a href="#" class="mobile-nav-item ${nav.active ? 'active' : ''}">${nav.text}</a>`;
-        });
-    }
-    
-    mobileMenu.innerHTML = menuHTML;
-    mobileMenu.insertBefore(closeButton, mobileMenu.firstChild);
-    
-    // Add to DOM
-    document.body.appendChild(mobileOverlay);
-    document.body.appendChild(mobileMenu);
-    
-    // Event listeners
-    mobileToggle.addEventListener('click', openMobileMenu);
-    closeButton.addEventListener('click', closeMobileMenu);
-    mobileOverlay.addEventListener('click', closeMobileMenu);
-    
-    // Handle mobile nav item clicks
-    const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
-    mobileNavItems.forEach(item => {
-        item.addEventListener('click', handleMobileNavClick);
-    });
-    
-    function openMobileMenu() {
-        mobileOverlay.classList.add('active');
-        mobileMenu.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        mobileToggle.innerHTML = '×';
-    }
-    
-    function closeMobileMenu() {
-        mobileOverlay.classList.remove('active');
-        mobileMenu.classList.remove('active');
-        document.body.style.overflow = '';
-        mobileToggle.innerHTML = '☰';
-    }
-    
-    function handleMobileNavClick(e) {
-        e.preventDefault();
-        
-        // Remove active class from all items
-        mobileNavItems.forEach(item => item.classList.remove('active'));
-        // Add active class to clicked item
-        e.target.classList.add('active');
-        
-        // Close menu
-        closeMobileMenu();
-        
-        // Handle navigation logic here
-        const navText = e.target.textContent;
-        alert(`Navigation to: ${navText}\n\nThis would navigate to the ${navText} page.`);
-    }
-    
-    // Handle escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeMobileMenu();
-        }
-    });
-    
-    // Handle window resize
-    window.addEventListener('resize', function() {
-        if (window.innerWidth > 1024) {
-            closeMobileMenu();
-        }
-    });
-}
-
-// Enhanced Touch Interactions for Mobile
-function initMobileTouchEnhancements() {
-    // Improve button feedback on mobile
-    const buttons = document.querySelectorAll('.primary-btn, .step-btn');
-    
-    buttons.forEach(button => {
-        button.addEventListener('touchstart', function() {
-            this.style.transform = 'scale(0.96)';
-        });
-        
-        button.addEventListener('touchend', function() {
-            setTimeout(() => {
-                this.style.transform = '';
-            }, 150);
-        });
-    });
-    
-    // Enhance card interactions for mobile
-    const cards = document.querySelectorAll('.step-card, .content-card');
-    
-    cards.forEach(card => {
-        let touchStartY = 0;
-        
-        card.addEventListener('touchstart', function(e) {
-            touchStartY = e.touches[0].clientY;
-        });
-        
-        card.addEventListener('touchmove', function(e) {
-            const touchY = e.touches[0].clientY;
-            const diff = touchStartY - touchY;
-            
-            // Prevent elastic scroll effect on cards
-            if (Math.abs(diff) > 5) {
-                e.stopPropagation();
+        // Close modal on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeCampaignModal();
             }
         });
-    });
-}
 
-// Mobile Viewport Height Fix (for iOS Safari)
-function initMobileViewportFix() {
-    function setViewportHeight() {
-        const vh = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty('--vh', `${vh}px`);
-    }
-    
-    setViewportHeight();
-    window.addEventListener('resize', setViewportHeight);
-    window.addEventListener('orientationchange', function() {
-        setTimeout(setViewportHeight, 500);
-    });
-}
+        // Close modal on overlay click
+        document.getElementById('campaignModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCampaignModal();
+            }
+        });
 
-// Mobile Performance Optimizations
-function initMobilePerformanceOptimizations() {
-    // Lazy load animations on mobile
-    if (window.innerWidth <= 768) {
-        const animateElements = document.querySelectorAll('.animate-in');
-        
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '50px'
-        };
-        
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                    observer.unobserve(entry.target);
+        /* ==========================================================================
+           MOBILE JAVASCRIPT FUNCTIONALITY
+           ========================================================================== */
+
+        // Mobile Navigation System
+        function initMobileNavigation() {
+            // Create mobile menu elements
+            const header = document.querySelector('.header-content');
+            const userSection = document.querySelector('.user-section');
+            
+            // Add mobile toggle button
+            const mobileToggle = document.createElement('button');
+            mobileToggle.className = 'mobile-menu-toggle';
+            mobileToggle.innerHTML = '☰';
+            mobileToggle.setAttribute('aria-label', 'Toggle mobile menu');
+            
+            // Insert toggle before user section
+            userSection.parentNode.insertBefore(mobileToggle, userSection);
+            
+            // Create mobile overlay and menu
+            const mobileOverlay = document.createElement('div');
+            mobileOverlay.className = 'mobile-nav-overlay';
+            
+            const mobileMenu = document.createElement('div');
+            mobileMenu.className = 'mobile-nav-menu';
+            
+            const closeButton = document.createElement('button');
+            closeButton.className = 'mobile-nav-close';
+            closeButton.innerHTML = '×';
+            closeButton.setAttribute('aria-label', 'Close mobile menu');
+            
+            // Advertiser navigation  
+            const advertiserNavs = [
+                { text: 'Dashboard', active: true },
+                { text: 'Create Campaign' },
+                { text: 'My Campaigns' },
+                { text: 'Analytics' },
+                { text: 'Settings' }
+            ];
+            
+            let menuHTML = '';
+            advertiserNavs.forEach(nav => {
+                menuHTML += `<a href="#" class="mobile-nav-item ${nav.active ? 'active' : ''}">${nav.text}</a>`;
+            });
+            
+            mobileMenu.innerHTML = menuHTML;
+            mobileMenu.insertBefore(closeButton, mobileMenu.firstChild);
+            
+            // Add to DOM
+            document.body.appendChild(mobileOverlay);
+            document.body.appendChild(mobileMenu);
+            
+            // Event listeners
+            mobileToggle.addEventListener('click', openMobileMenu);
+            closeButton.addEventListener('click', closeMobileMenu);
+            mobileOverlay.addEventListener('click', closeMobileMenu);
+            
+            // Handle mobile nav item clicks
+            const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
+            mobileNavItems.forEach(item => {
+                item.addEventListener('click', handleMobileNavClick);
+            });
+            
+            function openMobileMenu() {
+                mobileOverlay.classList.add('active');
+                mobileMenu.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                mobileToggle.innerHTML = '×';
+            }
+            
+            function closeMobileMenu() {
+                mobileOverlay.classList.remove('active');
+                mobileMenu.classList.remove('active');
+                document.body.style.overflow = '';
+                mobileToggle.innerHTML = '☰';
+            }
+            
+            function handleMobileNavClick(e) {
+                e.preventDefault();
+                
+                // Remove active class from all items
+                mobileNavItems.forEach(item => item.classList.remove('active'));
+                // Add active class to clicked item
+                e.target.classList.add('active');
+                
+                // Close menu
+                closeMobileMenu();
+                
+                // Handle navigation logic here
+                const navText = e.target.textContent;
+                if (navText === 'Create Campaign') {
+                    openCampaignModal();
+                } else {
+                    alert(`Navigation to: ${navText}\n\nThis would navigate to the ${navText} page.`);
+                }
+            }
+            
+            // Handle escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeMobileMenu();
                 }
             });
-        }, observerOptions);
-        
-        animateElements.forEach(el => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(30px)';
-            el.style.transition = 'all 0.6s ease';
-            observer.observe(el);
-        });
-    }
-}
-
-// Mobile Accessibility Enhancements
-function initMobileAccessibility() {
-    // Improve focus management for mobile screen readers
-    const focusableElements = document.querySelectorAll('button, a, input, [tabindex]:not([tabindex="-1"])');
-    
-    focusableElements.forEach(element => {
-        element.addEventListener('focus', function() {
-            this.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'center' 
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 1024) {
+                    closeMobileMenu();
+                }
             });
-        });
-    });
-    
-    // Announce page transitions for screen readers
-    const navItems = document.querySelectorAll('.nav-tab, .mobile-nav-item');
-    navItems.forEach(item => {
-        item.addEventListener('click', function() {
-            // Create announcement for screen readers
-            const announcement = document.createElement('div');
-            announcement.setAttribute('aria-live', 'polite');
-            announcement.setAttribute('aria-atomic', 'true');
-            announcement.className = 'sr-only';
-            announcement.textContent = `Navigating to ${this.textContent}`;
-            
-            document.body.appendChild(announcement);
-            
-            setTimeout(() => {
-                document.body.removeChild(announcement);
-            }, 1000);
-        });
-    });
-}
+        }
 
-// Mobile-specific CSS utility class
-function addMobileCSSUtilities() {
-    const style = document.createElement('style');
-    style.textContent = `
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
-        }
-        
-        .mobile-nav-menu {
-            height: 100vh;
-            height: calc(var(--vh, 1vh) * 100);
-        }
-        
-        @media (max-width: 768px) {
-            .no-scroll {
-                overflow: hidden !important;
-                position: fixed !important;
-                width: 100% !important;
+        // Initialize mobile functionality
+        function initMobileDashboard() {
+            // Wait for DOM to be ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    initMobileNavigation();
+                });
+            } else {
+                initMobileNavigation();
             }
         }
-    `;
-    document.head.appendChild(style);
-}
 
-// Initialize all mobile functionality
-function initMobileDashboard() {
-    // Wait for DOM to be ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            initMobileNavigation();
-            initMobileTouchEnhancements();
-            initMobileViewportFix();
-            initMobilePerformanceOptimizations();
-            initMobileAccessibility();
-            addMobileCSSUtilities();
-        });
-    } else {
-        initMobileNavigation();
-        initMobileTouchEnhancements();
-        initMobileViewportFix();
-        initMobilePerformanceOptimizations();
-        initMobileAccessibility();
-        addMobileCSSUtilities();
-    }
-}
-
-// Start mobile initialization
-initMobileDashboard();
-
-// Export functions for manual initialization if needed
-window.mobileNavigation = {
-    init: initMobileNavigation,
-    touchEnhancements: initMobileTouchEnhancements,
-    viewportFix: initMobileViewportFix,
-    performanceOptimizations: initMobilePerformanceOptimizations,
-    accessibility: initMobileAccessibility
-};
+        // Start mobile initialization
+        initMobileDashboard();
     </script>
 </body>
 </html>
