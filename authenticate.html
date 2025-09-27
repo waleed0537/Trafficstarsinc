@@ -376,6 +376,23 @@
             font-weight: 400;
         }
 
+        /* Loading spinner */
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         /* Responsive design */
         @media (max-width: 480px) {
             .auth-container {
@@ -464,7 +481,7 @@
 
             <div class="form-group">
                 <label class="form-label" for="signupPassword">Password</label>
-                <input type="password" class="form-input" id="signupPassword" name="password" placeholder="Create a strong password" required>
+                <input type="password" class="form-input" id="signupPassword" name="password" placeholder="Create a strong password" required minlength="6">
             </div>
 
             <div class="form-group">
@@ -510,6 +527,9 @@
     </div>
 
     <script>
+        // API Base URL
+        const API_BASE = window.location.origin + '/api';
+
         function switchTab(tab) {
             // Update tab buttons
             const buttons = document.querySelectorAll('.tab-button');
@@ -527,94 +547,172 @@
             }
         }
 
-        // Hardcoded test credentials
-        const TEST_EMAIL = 'test@mail.com';
-        const TEST_PASSWORD = 'test';
-
-        // Form submission handlers
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        // Login Form Handler
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            const userType = document.querySelector('input[name="userType"]:checked').value;
+            const formData = new FormData(this);
+            const email = formData.get('email');
+            const password = formData.get('password');
+            const userType = formData.get('userType');
+            const remember = formData.get('remember') === 'on';
+            
             const submitButton = this.querySelector('.submit-button');
+            const originalText = submitButton.textContent;
             
             // Disable button and show loading state
             submitButton.disabled = true;
-            submitButton.textContent = 'Signing In...';
+            submitButton.innerHTML = '<span class="loading-spinner"></span>Signing In...';
             
-            // Simulate API call delay
-            setTimeout(() => {
-                if (email === TEST_EMAIL && password === TEST_PASSWORD) {
-                    // Successful login
-                    submitButton.textContent = 'Success!';
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        userType,
+                        remember
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Store auth token
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('userData', JSON.stringify(data.user));
+                    
+                    // Success state
+                    submitButton.innerHTML = '✅ Success!';
                     submitButton.style.background = '#10b981';
                     
-                    // Show success message based on user type
+                    // Show success message
                     const userTypeName = userType.charAt(0).toUpperCase() + userType.slice(1);
-                    showMessage(`Welcome back! Logging in as ${userTypeName}...`, 'success');
+                    showMessage(`Welcome back, ${data.user.name}! Logging in as ${userTypeName}...`, 'success');
                     
                     // Redirect based on user type after 2 seconds
                     setTimeout(() => {
                         showMessage('Redirecting to dashboard...', 'info');
                         
-                        // Perform the actual redirect after another second
                         setTimeout(() => {
                             if (userType === 'advertiser') {
-                                window.location.href = 'advertiser_admin.html';
+                                window.location.href = '/advertiser_admin.html';
                             } else if (userType === 'publisher') {
-                                window.location.href = 'publisher_admin.html';
+                                window.location.href = '/publisher_admin.html';
                             }
                         }, 1000);
                     }, 1500);
                     
                 } else {
-                    // Failed login
+                    // Error state
                     submitButton.disabled = false;
-                    submitButton.textContent = 'Sign In';
-                    showMessage('Invalid email or password. Please try again.', 'error');
+                    submitButton.textContent = originalText;
+                    submitButton.style.background = '#171C6B';
+                    showMessage(data.message || 'Login failed. Please try again.', 'error');
                 }
-            }, 1000);
+            } catch (error) {
+                console.error('Login error:', error);
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+                submitButton.style.background = '#171C6B';
+                showMessage('Network error. Please check your connection and try again.', 'error');
+            }
         });
 
-        document.getElementById('signupForm').addEventListener('submit', function(e) {
+        // Signup Form Handler
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const password = document.getElementById('signupPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            const userType = document.querySelector('input[name="signupUserType"]:checked').value;
-            const submitButton = this.querySelector('.submit-button');
             
+            const formData = new FormData(this);
+            const name = formData.get('name');
+            const email = formData.get('email');
+            const password = formData.get('password');
+            const confirmPassword = formData.get('confirmPassword');
+            const userType = formData.get('signupUserType');
+            const terms = formData.get('terms') === 'on';
+            
+            const submitButton = this.querySelector('.submit-button');
+            const originalText = submitButton.textContent;
+            
+            // Client-side validation
             if (password !== confirmPassword) {
                 showMessage('Passwords do not match', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessage('Password must be at least 6 characters long', 'error');
+                return;
+            }
+
+            if (!terms) {
+                showMessage('You must accept the terms and conditions', 'error');
                 return;
             }
             
             // Disable button and show loading state
             submitButton.disabled = true;
-            submitButton.textContent = 'Creating Account...';
+            submitButton.innerHTML = '<span class="loading-spinner"></span>Creating Account...';
             
-            // Simulate API call delay
-            setTimeout(() => {
-                const userTypeName = userType.charAt(0).toUpperCase() + userType.slice(1);
-                submitButton.textContent = 'Account Created!';
-                submitButton.style.background = '#10b981';
-                showMessage(`${userTypeName} account created successfully! You can now sign in.`, 'success');
-                
-                // Switch to login tab after successful signup
-                setTimeout(() => {
-                    document.querySelector('.tab-button').click();
-                    // Pre-fill login form with the registered email and user type
-                    document.getElementById('loginEmail').value = document.getElementById('signupEmail').value;
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        password,
+                        confirmPassword,
+                        userType,
+                        terms
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Success state
+                    submitButton.innerHTML = '✅ Account Created!';
+                    submitButton.style.background = '#10b981';
                     
-                    // Set the matching user type radio button
-                    if (userType === 'advertiser') {
-                        document.getElementById('advertiser').checked = true;
-                    } else {
-                        document.getElementById('publisher').checked = true;
-                    }
-                }, 2000);
-            }, 1000);
+                    const userTypeName = userType.charAt(0).toUpperCase() + userType.slice(1);
+                    showMessage(`${userTypeName} account created successfully! You can now sign in.`, 'success');
+                    
+                    // Switch to login tab after successful signup
+                    setTimeout(() => {
+                        document.querySelector('.tab-button').click();
+                        // Pre-fill login form with the registered email and user type
+                        document.getElementById('loginEmail').value = email;
+                        
+                        // Set the matching user type radio button
+                        if (userType === 'advertiser') {
+                            document.getElementById('advertiser').checked = true;
+                        } else {
+                            document.getElementById('publisher').checked = true;
+                        }
+                        
+                        showMessage('Please sign in with your new account', 'info');
+                    }, 2000);
+                    
+                } else {
+                    // Error state
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText;
+                    submitButton.style.background = '#171C6B';
+                    showMessage(data.message || 'Registration failed. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+                submitButton.style.background = '#171C6B';
+                showMessage('Network error. Please check your connection and try again.', 'error');
+            }
         });
 
         // Message system
@@ -640,6 +738,62 @@
                 }
             }, 5000);
         }
+
+        // Check if user is already logged in
+        window.addEventListener('load', function() {
+            const authToken = localStorage.getItem('authToken');
+            const userData = localStorage.getItem('userData');
+            
+            if (authToken && userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    showMessage(`You're already logged in as ${user.name}. Redirecting...`, 'info');
+                    
+                    setTimeout(() => {
+                        if (user.userType === 'advertiser') {
+                            window.location.href = '/advertiser_admin.html';
+                        } else if (user.userType === 'publisher') {
+                            window.location.href = '/publisher_admin.html';
+                        }
+                    }, 2000);
+                } catch (error) {
+                    // Clear invalid data
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userData');
+                }
+            }
+        });
+
+        // Password strength indicator
+        document.getElementById('signupPassword').addEventListener('input', function() {
+            const password = this.value;
+            const strength = calculatePasswordStrength(password);
+            
+            // You can add visual feedback here if needed
+        });
+
+        function calculatePasswordStrength(password) {
+            let score = 0;
+            if (password.length >= 6) score++;
+            if (password.length >= 8) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/[a-z]/.test(password)) score++;
+            if (/[0-9]/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+            return score;
+        }
+
+        // Form validation feedback
+        document.getElementById('confirmPassword').addEventListener('input', function() {
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = this.value;
+            
+            if (confirmPassword && password !== confirmPassword) {
+                this.style.borderColor = '#ef4444';
+            } else {
+                this.style.borderColor = '#e0e0e0';
+            }
+        });
     </script>
 </body>
 </html>
