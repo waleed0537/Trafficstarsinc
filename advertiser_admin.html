@@ -1,15 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Advertiser Dashboard - TrafficStars</title>
-    
+
     <!-- Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<script src="https://www.paypal.com/sdk/js?client-id=YOUR_PAYPAL_CLIENT_ID&currency=USD"></script>
+
     <style>
         * {
             margin: 0;
@@ -33,6 +38,1558 @@
             padding: 8px;
             border-radius: 8px;
             transition: all 0.3s ease;
+        }
+        /* ==========================================================================
+   ADD FUNDS MODAL STYLES
+   ========================================================================== */
+
+.add-funds-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 32px 80px rgba(23, 28, 107, 0.3);
+    z-index: 2001;
+    max-width: 700px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-overlay.active .add-funds-modal {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Funds Section */
+.funds-section {
+    margin-bottom: 32px;
+}
+
+.funds-section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #171C6B;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Amount Selection */
+.amount-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.amount-card {
+    padding: 24px 16px;
+    border: 2px solid rgba(23, 28, 107, 0.1);
+    border-radius: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(248, 250, 255, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.amount-card:hover {
+    border-color: rgba(45, 78, 245, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(23, 28, 107, 0.1);
+}
+
+.amount-card.selected {
+    border-color: #2d4ef5;
+    background: linear-gradient(135deg, rgba(45, 78, 245, 0.1) 0%, rgba(45, 78, 245, 0.05) 100%);
+}
+
+.amount-card.popular {
+    border-color: #2d4ef5;
+}
+
+.amount-popular-badge {
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    background: linear-gradient(135deg, #2d4ef5 0%, #171C6B 100%);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px;
+    text-align: center;
+    border-radius: 14px 14px 0 0;
+}
+
+.amount-card.popular {
+    padding-top: 32px;
+}
+
+.amount-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: #171C6B;
+    margin-bottom: 6px;
+}
+
+.amount-label {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* Custom Amount Input */
+.custom-amount-input {
+    margin-top: 20px;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.amount-input-wrapper {
+    position: relative;
+}
+
+.amount-currency {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    font-weight: 700;
+    color: #171C6B;
+}
+
+.amount-input {
+    padding-left: 45px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Payment Methods Grid */
+.payment-methods-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.payment-method-card {
+    padding: 24px 20px;
+    border: 2px solid rgba(23, 28, 107, 0.1);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(248, 250, 255, 0.5);
+    text-align: center;
+}
+
+.payment-method-card:hover {
+    border-color: rgba(45, 78, 245, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(23, 28, 107, 0.1);
+}
+
+.payment-method-card.active {
+    border-color: #2d4ef5;
+    background: linear-gradient(135deg, rgba(45, 78, 245, 0.1) 0%, rgba(45, 78, 245, 0.05) 100%);
+}
+
+.payment-method-logo {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.payment-method-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #171C6B;
+    margin-bottom: 4px;
+}
+
+.payment-method-desc {
+    font-size: 13px;
+    color: #64748b;
+}
+
+/* Stripe Card Element */
+.stripe-card-element {
+    padding: 16px 20px;
+    border: 2px solid rgba(23, 28, 107, 0.1);
+    border-radius: 12px;
+    background: rgba(248, 250, 255, 0.5);
+    transition: all 0.3s ease;
+}
+
+.stripe-card-element.StripeElement--focus {
+    border-color: #2d4ef5;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(45, 78, 245, 0.1);
+}
+
+.stripe-card-element.StripeElement--invalid {
+    border-color: #dc2626;
+}
+
+.card-errors {
+    color: #dc2626;
+    font-size: 14px;
+    margin-top: 8px;
+    font-weight: 500;
+}
+
+/* Security Badges */
+.security-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 20px;
+    padding: 16px;
+    background: rgba(16, 185, 129, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(16, 185, 129, 0.1);
+}
+
+.security-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #059669;
+    font-weight: 600;
+}
+
+.security-badge span:first-child {
+    font-size: 16px;
+}
+
+/* Payment Summary */
+.payment-summary {
+    background: linear-gradient(135deg, rgba(23, 28, 107, 0.05) 0%, rgba(45, 78, 245, 0.03) 100%);
+    padding: 20px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(23, 28, 107, 0.1);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.summary-row.total {
+    border-top: 2px solid rgba(23, 28, 107, 0.1);
+    margin-top: 8px;
+    padding-top: 16px;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.summary-label {
+    color: #64748b;
+    font-weight: 500;
+}
+
+.summary-value {
+    color: #171C6B;
+    font-weight: 700;
+}
+
+.summary-row.total .summary-value {
+    font-size: 24px;
+    background: linear-gradient(135deg, #171C6B 0%, #2d4ef5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* PayPal Button Container */
+#paypal-button-container {
+    margin: 20px 0;
+}
+
+/* Mobile Responsive - Add Funds */
+@media (max-width: 768px) {
+    .add-funds-modal {
+        width: 95%;
+        max-height: 95vh;
+    }
+
+    .amount-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .amount-card {
+        padding: 20px 12px;
+    }
+
+    .amount-value {
+        font-size: 24px;
+    }
+
+    .payment-methods-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .security-badges {
+        flex-direction: column;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .amount-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .amount-value {
+        font-size: 28px;
+    }
+
+    .summary-row.total .summary-value {
+        font-size: 20px;
+    }
+}
+
+        /* ==========================================================================
+   SETTINGS SECTION STYLES
+   ========================================================================== */
+
+        /* Settings Navigation */
+        .settings-nav {
+            display: flex;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            padding: 12px;
+            border-radius: 16px;
+            border: 1px solid rgba(23, 28, 107, 0.08);
+            margin-bottom: 32px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .settings-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        .settings-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #64748b;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .settings-nav-item:hover {
+            background: rgba(248, 250, 255, 0.8);
+            color: #171C6B;
+        }
+
+        .settings-nav-item.active {
+            background: linear-gradient(135deg, #171C6B 0%, #2d4ef5 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(23, 28, 107, 0.3);
+        }
+
+        .settings-nav-icon {
+            font-size: 18px;
+        }
+
+        /* Settings Content */
+        .settings-content {
+            position: relative;
+        }
+
+        .settings-panel {
+            display: none;
+        }
+
+        .settings-panel.active {
+            display: block;
+        }
+
+        .settings-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(23, 28, 107, 0.08);
+            box-shadow: 0 8px 32px rgba(23, 28, 107, 0.06);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .settings-card-header {
+            padding: 28px 32px;
+            border-bottom: 1px solid rgba(23, 28, 107, 0.08);
+        }
+
+        .settings-card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #171C6B;
+            margin-bottom: 6px;
+        }
+
+        .settings-card-subtitle {
+            font-size: 15px;
+            color: #64748b;
+        }
+
+        .settings-card-body {
+            padding: 32px;
+        }
+
+        /* Profile Photo Section */
+        .profile-photo-section {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding: 24px;
+            background: rgba(248, 250, 255, 0.5);
+            border-radius: 16px;
+            margin-bottom: 32px;
+        }
+
+        .profile-photo-wrapper {
+            position: relative;
+        }
+
+        .profile-photo {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #171C6B 0%, #2d4ef5 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+            font-weight: 700;
+            box-shadow: 0 8px 24px rgba(23, 28, 107, 0.2);
+        }
+
+        .profile-photo-edit {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 36px;
+            height: 36px;
+            background: white;
+            border: 3px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 4px 12px rgba(23, 28, 107, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .profile-photo-edit:hover {
+            transform: scale(1.1);
+        }
+
+        .profile-photo-info h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #171C6B;
+            margin-bottom: 4px;
+        }
+
+        /* Settings Form */
+        .settings-form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .form-hint {
+            display: block;
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 6px;
+        }
+
+        .settings-form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding-top: 24px;
+            border-top: 1px solid rgba(23, 28, 107, 0.08);
+        }
+
+        .btn-secondary-small {
+            padding: 8px 16px;
+            background: transparent;
+            color: #171C6B;
+            border: 2px solid rgba(23, 28, 107, 0.2);
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary-small:hover {
+            background: rgba(23, 28, 107, 0.05);
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .info-label {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-size: 16px;
+            color: #171C6B;
+            font-weight: 600;
+        }
+
+        /* Password Strength */
+        .password-strength {
+            margin-top: 24px;
+            padding: 20px;
+            background: rgba(248, 250, 255, 0.5);
+            border-radius: 12px;
+        }
+
+        .password-strength-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #171C6B;
+            margin-bottom: 8px;
+        }
+
+        .password-strength-bar {
+            height: 8px;
+            background: rgba(23, 28, 107, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .password-strength-fill {
+            height: 100%;
+            width: 0%;
+            background: #dc2626;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .password-strength-text {
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* Feature Box */
+        .feature-box {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 24px;
+            background: rgba(248, 250, 255, 0.5);
+            border-radius: 16px;
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #171C6B 0%, #2d4ef5 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 8px 24px rgba(23, 28, 107, 0.15);
+        }
+
+        .feature-content {
+            flex: 1;
+        }
+
+        .feature-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #171C6B;
+            margin-bottom: 4px;
+        }
+
+        .feature-description {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: 0.3s;
+            border-radius: 28px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input:checked+.toggle-slider {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        input:checked+.toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        /* Sessions List */
+        .sessions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .session-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: rgba(248, 250, 255, 0.5);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .session-item:hover {
+            background: rgba(248, 250, 255, 0.9);
+        }
+
+        .session-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .session-device {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #171C6B 0%, #2d4ef5 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .session-details h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #171C6B;
+            margin-bottom: 4px;
+        }
+
+        .session-details p {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .session-current {
+            padding: 4px 12px;
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .btn-text {
+            background: none;
+            border: none;
+            color: #171C6B;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-text:hover {
+            background: rgba(23, 28, 107, 0.05);
+        }
+
+        .btn-text.danger {
+            color: #dc2626;
+        }
+
+        .btn-text.danger:hover {
+            background: rgba(220, 38, 38, 0.05);
+        }
+
+        /* Notification Items */
+        .notification-items {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(23, 28, 107, 0.06);
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-info {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #171C6B;
+            margin-bottom: 4px;
+        }
+
+        .notification-description {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        /* Balance Display */
+        .balance-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 32px;
+            background: linear-gradient(135deg, rgba(23, 28, 107, 0.05) 0%, rgba(45, 78, 245, 0.03) 100%);
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+
+        .balance-amount {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .balance-label {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .balance-value {
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #171C6B 0%, #2d4ef5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .balance-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .balance-info-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(248, 250, 255, 0.5);
+            border-radius: 12px;
+        }
+
+        .balance-info-icon {
+            font-size: 32px;
+        }
+
+        .balance-info-label {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .balance-info-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #171C6B;
+        }
+
+        /* Payment Methods */
+        .payment-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .payment-method-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px;
+            background: rgba(248, 250, 255, 0.5);
+            border-radius: 12px;
+        }
+
+        .payment-method-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #171C6B 0%, #2d4ef5 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .payment-method-info {
+            flex: 1;
+        }
+
+        .payment-method-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #171C6B;
+            margin-bottom: 4px;
+        }
+
+        .payment-method-details {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        /* Transactions List */
+        .transactions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .transaction-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(248, 250, 255, 0.5);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .transaction-item:hover {
+            background: rgba(248, 250, 255, 0.9);
+        }
+
+        .transaction-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(220, 38, 38, 0.1);
+            color: #dc2626;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .transaction-icon.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+        }
+
+        .transaction-info {
+            flex: 1;
+        }
+
+        .transaction-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #171C6B;
+            margin-bottom: 4px;
+        }
+
+        .transaction-date {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .transaction-amount {
+            font-size: 18px;
+            font-weight: 700;
+            color: #dc2626;
+        }
+
+        .transaction-amount.success {
+            color: #059669;
+        }
+
+        /* API Keys */
+        .api-keys-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .api-key-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px;
+            background: rgba(248, 250, 255, 0.5);
+            border-radius: 12px;
+        }
+
+        .api-key-info {
+            flex: 1;
+        }
+
+        .api-key-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #171C6B;
+            margin-bottom: 12px;
+        }
+
+        .api-key-value {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .api-key-value code {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #171C6B;
+            border: 1px solid rgba(23, 28, 107, 0.1);
+        }
+
+        .btn-icon {
+            background: white;
+            border: 1px solid rgba(23, 28, 107, 0.1);
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-icon:hover {
+            background: rgba(23, 28, 107, 0.05);
+        }
+
+        .api-key-date {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        /* API Docs Grid */
+        .api-docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .api-doc-card {
+            padding: 24px;
+            background: rgba(248, 250, 255, 0.5);
+            border-radius: 12px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .api-doc-card:hover {
+            background: rgba(248, 250, 255, 0.9);
+            border-color: rgba(23, 28, 107, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .api-doc-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .api-doc-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #171C6B;
+            margin-bottom: 6px;
+        }
+
+        .api-doc-description {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #171C6B;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-description {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        /* Mobile Responsive Settings */
+        @media (max-width: 768px) {
+            .settings-nav {
+                padding: 8px;
+                gap: 8px;
+            }
+
+            .settings-nav-item {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            .settings-card {
+                margin: 0 -16px 24px;
+                border-radius: 0;
+            }
+
+            .settings-card-header {
+                padding: 20px;
+            }
+
+            .settings-card-body {
+                padding: 20px;
+            }
+
+            .profile-photo-section {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .settings-form-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .settings-form-actions {
+                flex-direction: column;
+            }
+
+            .settings-form-actions button {
+                width: 100%;
+            }
+
+            .balance-display {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .balance-display .btn-primary {
+                width: 100%;
+            }
+
+            .balance-info {
+                grid-template-columns: 1fr;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-box {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .notification-item,
+            .session-item,
+            .payment-method-item,
+            .api-key-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .api-docs-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .settings-card-title {
+                font-size: 18px;
+            }
+
+            .balance-value {
+                font-size: 32px;
+            }
+
+            .profile-photo {
+                width: 80px;
+                height: 80px;
+                font-size: 28px;
+            }
+        }
+
+        /* ==========================================================================
+   ANALYTICS SECTION STYLES
+   ========================================================================== */
+
+        .analytics-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .analytics-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 28px;
+            border: 1px solid rgba(23, 28, 107, 0.08);
+            box-shadow: 0 8px 32px rgba(23, 28, 107, 0.06);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .analytics-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(23, 28, 107, 0.12);
+        }
+
+        .analytics-card-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(23, 28, 107, 0.15);
+        }
+
+        .analytics-card-content {
+            flex: 1;
+        }
+
+        .analytics-card-label {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .analytics-card-value {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #171C6B 0%, #2d4ef5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+            margin-bottom: 4px;
+        }
+
+        .analytics-card-change {
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .analytics-card-change.positive {
+            color: #059669;
+        }
+
+        .analytics-card-change.positive::before {
+            content: '↗';
+            font-size: 16px;
+        }
+
+        .analytics-card-change.negative {
+            color: #dc2626;
+        }
+
+        .analytics-card-change.negative::before {
+            content: '↘';
+            font-size: 16px;
+        }
+
+        /* Charts Grid */
+        .analytics-charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .analytics-chart-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 28px;
+            border: 1px solid rgba(23, 28, 107, 0.08);
+            box-shadow: 0 8px 32px rgba(23, 28, 107, 0.06);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .chart-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #171C6B;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .chart-select {
+            padding: 8px 16px;
+            border: 2px solid rgba(23, 28, 107, 0.1);
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #171C6B;
+            background: rgba(248, 250, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .chart-select:focus {
+            outline: none;
+            border-color: #2d4ef5;
+            background: white;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Analytics Table */
+        .analytics-table-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 28px;
+            border: 1px solid rgba(23, 28, 107, 0.08);
+            box-shadow: 0 8px 32px rgba(23, 28, 107, 0.06);
+            margin-bottom: 32px;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .analytics-table-container {
+            overflow-x: auto;
+        }
+
+        .analytics-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .analytics-table thead th {
+            text-align: left;
+            padding: 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid rgba(23, 28, 107, 0.1);
+            background: rgba(248, 250, 255, 0.5);
+        }
+
+        .analytics-table tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        .analytics-table tbody tr:hover {
+            background: rgba(248, 250, 255, 0.8);
+        }
+
+        .analytics-table tbody td {
+            padding: 16px;
+            font-size: 15px;
+            color: #1a1a1a;
+            border-bottom: 1px solid rgba(23, 28, 107, 0.06);
+        }
+
+        .analytics-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table-campaign-name {
+            font-weight: 600;
+            color: #171C6B;
+        }
+
+        .table-metric {
+            font-weight: 600;
+            color: #171C6B;
+        }
+
+        .table-metric-secondary {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        /* Geographic List */
+        .geo-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .geo-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(248, 250, 255, 0.5);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .geo-item:hover {
+            background: rgba(248, 250, 255, 0.9);
+            transform: translateX(4px);
+        }
+
+        .geo-flag {
+            font-size: 32px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(23, 28, 107, 0.08);
+        }
+
+        .geo-details {
+            flex: 1;
+        }
+
+        .geo-country {
+            font-size: 16px;
+            font-weight: 600;
+            color: #171C6B;
+            margin-bottom: 4px;
+        }
+
+        .geo-stats {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .geo-bar {
+            width: 100px;
+            height: 8px;
+            background: rgba(23, 28, 107, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .geo-bar-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #171C6B 0%, #2d4ef5 100%);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Mobile Responsive Analytics */
+        @media (max-width: 768px) {
+            .analytics-overview {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .analytics-card {
+                padding: 20px;
+            }
+
+            .analytics-card-icon {
+                width: 56px;
+                height: 56px;
+            }
+
+            .analytics-card-value {
+                font-size: 28px;
+            }
+
+            .analytics-charts-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .analytics-chart-card {
+                padding: 20px;
+            }
+
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+
+            .analytics-table-card {
+                padding: 20px;
+                margin: 0 -16px;
+                border-radius: 0;
+            }
+
+            .analytics-table {
+                font-size: 13px;
+            }
+
+            .analytics-table thead th,
+            .analytics-table tbody td {
+                padding: 12px 8px;
+            }
+
+            .geo-item {
+                padding: 12px;
+            }
+
+            .geo-flag {
+                font-size: 24px;
+                width: 40px;
+                height: 40px;
+            }
+
+            .table-header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            .table-header .btn-secondary {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .analytics-card-value {
+                font-size: 24px;
+            }
+
+            .chart-container {
+                height: 200px;
+            }
         }
 
         .mobile-menu-toggle:hover {
@@ -122,28 +1679,29 @@
             .nav-tabs {
                 display: none;
             }
-            
+
             .mobile-menu-toggle {
                 display: block;
             }
-            
+
             .header-content {
                 padding: 0 20px;
             }
-            
+
             .user-section {
                 gap: 16px;
             }
-            
-            .balance, .earnings {
+
+            .balance,
+            .earnings {
                 padding: 8px 12px;
                 font-size: 13px;
             }
-            
+
             .user-dropdown {
                 padding: 6px 12px;
             }
-            
+
             .user-name {
                 display: none;
             }
@@ -155,26 +1713,26 @@
                 font-size: 28px !important;
                 line-height: 1.2;
             }
-            
+
             .section-title {
                 font-size: 24px !important;
                 margin-bottom: 16px;
             }
-            
+
             .section-subtitle {
                 font-size: 16px !important;
                 line-height: 1.5;
             }
-            
+
             .step-title {
                 font-size: 18px !important;
                 line-height: 1.3;
             }
-            
+
             .content-title {
                 font-size: 18px !important;
             }
-            
+
             .welcome-description {
                 font-size: 16px !important;
                 line-height: 1.5;
@@ -186,43 +1744,43 @@
             .main-content {
                 padding: 20px 16px !important;
             }
-            
+
             .hero-section {
                 grid-template-columns: 1fr !important;
                 gap: 20px !important;
                 margin-bottom: 32px !important;
             }
-            
+
             .welcome-card {
                 padding: 32px 24px !important;
                 border-radius: 20px !important;
             }
-            
+
             .stats-panel {
                 padding: 24px 20px !important;
                 border-radius: 20px !important;
             }
-            
+
             .section-header {
                 margin-bottom: 32px !important;
                 padding: 0 8px;
             }
-            
+
             .steps-grid {
                 grid-template-columns: 1fr !important;
                 gap: 16px !important;
             }
-            
+
             .step-card {
                 padding: 24px 20px !important;
                 border-radius: 20px !important;
             }
-            
+
             .content-grid {
                 grid-template-columns: 1fr !important;
                 gap: 20px !important;
             }
-            
+
             .content-card {
                 padding: 24px 20px !important;
                 border-radius: 20px !important;
@@ -236,25 +1794,27 @@
                 padding: 14px 24px !important;
                 font-size: 15px !important;
             }
-            
+
             .step-btn {
                 padding: 12px 20px !important;
                 font-size: 14px !important;
             }
-            
+
             .stat-item {
                 padding: 16px 0 !important;
             }
-            
+
             .stat-value {
                 font-size: 18px !important;
             }
-            
-            .faq-item, .news-item {
+
+            .faq-item,
+            .news-item {
                 padding: 16px 0 !important;
             }
-            
-            .faq-item:hover, .stat-item:hover {
+
+            .faq-item:hover,
+            .stat-item:hover {
                 margin: 0 -12px !important;
                 padding: 16px 12px !important;
             }
@@ -266,52 +1826,54 @@
                 padding: 0 16px !important;
                 height: 60px !important;
             }
-            
+
             .logo {
                 width: 32px !important;
                 height: 32px !important;
                 font-size: 16px !important;
             }
-            
+
             .brand-name {
                 font-size: 18px !important;
             }
-            
-            .balance, .earnings {
+
+            .balance,
+            .earnings {
                 font-size: 12px !important;
                 padding: 6px 10px !important;
             }
-            
+
             .user-avatar {
                 width: 32px !important;
                 height: 32px !important;
                 font-size: 14px !important;
             }
-            
+
             .main-content {
                 padding: 16px 12px !important;
             }
-            
+
             .welcome-card {
                 padding: 24px 16px !important;
             }
-            
+
             .stats-panel {
                 padding: 20px 16px !important;
             }
-            
-            .step-card, .content-card {
+
+            .step-card,
+            .content-card {
                 padding: 20px 16px !important;
             }
-            
+
             .welcome-title {
                 font-size: 24px !important;
             }
-            
+
             .section-title {
                 font-size: 20px !important;
             }
-            
+
             .step-number {
                 width: 28px !important;
                 height: 28px !important;
@@ -321,6 +1883,7 @@
 
         /* Touch Optimizations */
         @media (hover: none) and (pointer: coarse) {
+
             .step-card:hover,
             .faq-item:hover,
             .stat-item:hover,
@@ -330,11 +1893,11 @@
                 margin: 0 !important;
                 padding: 16px 0 !important;
             }
-            
+
             .step-card:hover::before {
                 opacity: 0 !important;
             }
-            
+
             .primary-btn:hover,
             .step-btn:hover {
                 transform: none !important;
@@ -348,13 +1911,13 @@
                 transform: scale(0.98);
                 transition: transform 0.1s ease;
             }
-            
+
             .primary-btn:active,
             .step-btn:active {
                 transform: scale(0.96);
                 transition: transform 0.1s ease;
             }
-            
+
             .faq-item:active {
                 background: rgba(23, 28, 107, 0.05);
                 border-radius: 8px;
@@ -368,7 +1931,7 @@
             .animate-in {
                 animation-duration: 0.4s !important;
             }
-            
+
             .welcome-card::before {
                 width: 200px !important;
                 height: 200px !important;
@@ -381,27 +1944,31 @@
             .header {
                 position: relative !important;
             }
-            
+
             .main-content {
                 padding-top: 16px !important;
             }
-            
+
             .welcome-card {
                 padding: 24px 20px !important;
             }
-            
+
             .hero-section {
                 grid-template-columns: 1.5fr 1fr !important;
             }
-            
+
             .steps-grid {
                 grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
             }
         }
 
         /* High DPI/Retina Display Optimizations */
-        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-            .logo, .user-avatar, .step-number {
+        @media (-webkit-min-device-pixel-ratio: 2),
+        (min-resolution: 192dpi) {
+
+            .logo,
+            .user-avatar,
+            .step-number {
                 image-rendering: -webkit-optimize-contrast;
                 image-rendering: crisp-edges;
             }
@@ -413,12 +1980,12 @@
                 background: rgba(26, 26, 26, 0.98);
                 border-left: 1px solid rgba(255, 255, 255, 0.1);
             }
-            
+
             .mobile-nav-item {
                 color: #e2e8f0;
                 border-bottom-color: rgba(255, 255, 255, 0.1);
             }
-            
+
             .mobile-nav-close,
             .mobile-menu-toggle {
                 color: #e2e8f0;
@@ -1390,7 +2957,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* Campaign Status Badges */
@@ -1558,7 +3127,7 @@
                 grid-template-columns: 1fr;
                 gap: 24px;
             }
-            
+
             .nav-tabs {
                 display: none;
             }
@@ -1568,23 +3137,23 @@
             .main-content {
                 padding: 24px 16px;
             }
-            
+
             .header-content {
                 padding: 0 16px;
             }
-            
+
             .welcome-title {
                 font-size: 32px;
             }
-            
+
             .section-title {
                 font-size: 28px;
             }
-            
+
             .steps-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .content-grid {
                 grid-template-columns: 1fr;
             }
@@ -1630,6 +3199,7 @@
                 opacity: 0;
                 transform: translateY(30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -1678,6 +3248,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Auth Check Screen -->
     <div id="authCheck" class="auth-check">
@@ -1696,14 +3267,14 @@
                     <div class="logo">T</div>
                     <span class="brand-name">TrafficStars</span>
                 </div>
-                
+
                 <nav class="nav-tabs">
                     <button class="nav-tab active" data-tab="dashboard">Dashboard</button>
                     <button class="nav-tab" data-tab="my-campaigns">My Campaigns</button>
                     <button class="nav-tab" data-tab="analytics">Analytics</button>
                     <button class="nav-tab" data-tab="settings">Settings</button>
                 </nav>
-                
+
                 <div class="user-section">
                     <div class="balance">
                         <span id="userBalance">Balance: $0.00 USD</span>
@@ -1712,20 +3283,13 @@
                         <div class="user-avatar" id="userAvatar">U</div>
                         <span class="user-name" id="userName">Loading...</span>
                         <span style="color: #64748b;">▼</span>
-                        
+
                         <div class="user-dropdown-menu" id="userDropdownMenu">
-                            <a href="#" class="dropdown-item">
-                                <span>👤</span>
-                                <span>Profile Settings</span>
-                            </a>
-                            <a href="#" class="dropdown-item">
-                                <span>💳</span>
-                                <span>Billing & Payments</span>
-                            </a>
-                            <a href="#" class="dropdown-item">
-                                <span>📊</span>
-                                <span>Account Statistics</span>
-                            </a>
+                            <a href="#" class="dropdown-item" onclick="goToProfileSettings(); return false;">
+    <span>👤</span>
+    <span>Profile Settings</span>
+</a>
+                          
                             <button class="dropdown-item logout" onclick="logout()">
                                 <span>🚪</span>
                                 <span>Logout</span>
@@ -1751,7 +3315,7 @@
                                 <span>Advertiser Account</span>
                             </div>
                             <p class="welcome-description">
-                                Ready to scale your advertising campaigns? Access powerful tools, detailed analytics, 
+                                Ready to scale your advertising campaigns? Access powerful tools, detailed analytics,
                                 and premium inventory to maximize your ROI.
                             </p>
                             <button class="primary-btn" onclick="openCampaignModal()">
@@ -1759,7 +3323,7 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <div class="stats-panel animate-in">
                         <h3 class="stats-title">Performance Overview</h3>
                         <div class="stat-item">
@@ -1793,31 +3357,34 @@
                             Everything you need to launch successful advertising campaigns on our premium network
                         </p>
                     </div>
-                    
+
                     <div class="steps-grid">
                         <div class="step-card animate-in">
                             <div class="step-number">1</div>
                             <h3 class="step-title">Complete Your Profile</h3>
                             <p class="step-description">
-                                Set up your advertiser profile with business details, payment methods, and campaign preferences for seamless operations.
+                                Set up your advertiser profile with business details, payment methods, and campaign
+                                preferences for seamless operations.
                             </p>
                             <button class="step-btn" onclick="fillProfile()">Complete Profile</button>
                         </div>
-                        
+
                         <div class="step-card animate-in">
                             <div class="step-number">2</div>
                             <h3 class="step-title">Fund Your Account</h3>
                             <p class="step-description">
-                                Add funds to your advertising account using secure payment methods. Minimum deposit $100 to get started with campaigns.
+                                Add funds to your advertising account using secure payment methods. Minimum deposit $100
+                                to get started with campaigns.
                             </p>
-                            <button class="step-btn" onclick="topUpAccount()">Add Funds</button>
+                            <button class="step-btn" onclick="showAddFundsModal()">Add Funds</button>
                         </div>
-                        
+
                         <div class="step-card animate-in">
                             <div class="step-number">3</div>
                             <h3 class="step-title">Launch Campaign</h3>
                             <p class="step-description">
-                                Create your first advertising campaign with our advanced targeting options and premium inventory across multiple formats.
+                                Create your first advertising campaign with our advanced targeting options and premium
+                                inventory across multiple formats.
                             </p>
                             <button class="step-btn" onclick="openCampaignModal()">Create Campaign</button>
                         </div>
@@ -1828,22 +3395,22 @@
                 <section class="content-grid">
                     <div class="content-card animate-in">
                         <h3 class="content-title">Knowledge Base</h3>
-                        
+
                         <div class="faq-item" onclick="expandHelp(this)">
                             <div class="faq-question">Campaign Setup & Optimization</div>
                             <div class="faq-category">Best practices and strategies</div>
                         </div>
-                        
+
                         <div class="faq-item" onclick="expandHelp(this)">
                             <div class="faq-question">Advanced Tracking & Analytics</div>
                             <div class="faq-category">Postback integration guides</div>
                         </div>
-                        
+
                         <div class="faq-item" onclick="expandHelp(this)">
                             <div class="faq-question">Targeting & Audience Insights</div>
                             <div class="faq-category">Maximize your reach</div>
                         </div>
-                        
+
                         <div class="faq-item" onclick="expandHelp(this)">
                             <div class="faq-question">Performance Optimization</div>
                             <div class="faq-category">Scale successful campaigns</div>
@@ -1852,22 +3419,25 @@
 
                     <div class="content-card animate-in">
                         <h3 class="content-title">Platform Updates</h3>
-                        
+
                         <div class="news-item">
                             <div class="news-title">Advanced AI Optimization Engine</div>
-                            <p class="news-excerpt">New machine learning algorithms automatically optimize your campaigns for better performance and ROI.</p>
+                            <p class="news-excerpt">New machine learning algorithms automatically optimize your
+                                campaigns for better performance and ROI.</p>
                             <div class="news-meta">2 hours ago • Platform Features</div>
                         </div>
-                        
+
                         <div class="news-item">
                             <div class="news-title">Enhanced Audience Targeting</div>
-                            <p class="news-excerpt">Improved demographic and behavioral targeting options with real-time audience insights.</p>
+                            <p class="news-excerpt">Improved demographic and behavioral targeting options with real-time
+                                audience insights.</p>
                             <div class="news-meta">1 day ago • Targeting Updates</div>
                         </div>
-                        
+
                         <div class="news-item">
                             <div class="news-title">New Analytics Dashboard</div>
-                            <p class="news-excerpt">Comprehensive reporting suite with advanced metrics and customizable dashboard views.</p>
+                            <p class="news-excerpt">Comprehensive reporting suite with advanced metrics and customizable
+                                dashboard views.</p>
                             <div class="news-meta">3 days ago • Dashboard</div>
                         </div>
                     </div>
@@ -1880,7 +3450,7 @@
                     <h2 class="section-title">My Campaigns</h2>
                     <p class="section-subtitle">Manage and monitor all your advertising campaigns</p>
                 </div>
-                
+
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
                     <div>
                         <button class="btn-secondary" onclick="refreshCampaigns()">
@@ -1907,6 +3477,856 @@
                     <div id="campaignsList"></div>
                 </div>
             </div>
+            <!-- Analytics Section -->
+            <div id="analytics-section" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title">Campaign Analytics</h2>
+                    <p class="section-subtitle">Comprehensive performance insights and metrics for your campaigns</p>
+                </div>
+
+                <!-- Analytics Overview Cards -->
+                <div class="analytics-overview">
+                    <div class="analytics-card animate-in">
+                        <div class="analytics-card-icon"
+                            style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                            <span style="font-size: 24px;">💰</span>
+                        </div>
+                        <div class="analytics-card-content">
+                            <div class="analytics-card-label">Total Revenue</div>
+                            <div class="analytics-card-value" id="analyticsRevenue">$0.00</div>
+                            <div class="analytics-card-change positive" id="revenueChange">+0%</div>
+                        </div>
+                    </div>
+
+                    <div class="analytics-card animate-in">
+                        <div class="analytics-card-icon"
+                            style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+                            <span style="font-size: 24px;">👁️</span>
+                        </div>
+                        <div class="analytics-card-content">
+                            <div class="analytics-card-label">Total Impressions</div>
+                            <div class="analytics-card-value" id="analyticsImpressions">0</div>
+                            <div class="analytics-card-change positive" id="impressionsChange">+0%</div>
+                        </div>
+                    </div>
+
+                    <div class="analytics-card animate-in">
+                        <div class="analytics-card-icon"
+                            style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                            <span style="font-size: 24px;">🖱️</span>
+                        </div>
+                        <div class="analytics-card-content">
+                            <div class="analytics-card-label">Total Clicks</div>
+                            <div class="analytics-card-value" id="analyticsClicks">0</div>
+                            <div class="analytics-card-change positive" id="clicksChange">+0%</div>
+                        </div>
+                    </div>
+
+                    <div class="analytics-card animate-in">
+                        <div class="analytics-card-icon"
+                            style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">
+                            <span style="font-size: 24px;">📊</span>
+                        </div>
+                        <div class="analytics-card-content">
+                            <div class="analytics-card-label">Average CTR</div>
+                            <div class="analytics-card-value" id="analyticsAvgCTR">0.00%</div>
+                            <div class="analytics-card-change positive" id="ctrChange">+0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="analytics-charts-grid">
+                    <!-- Performance Trend -->
+                    <div class="analytics-chart-card animate-in">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Performance Trend</h3>
+                            <div class="chart-controls">
+                                <select class="chart-select" id="performancePeriod" onchange="updatePerformanceChart()">
+                                    <option value="7">Last 7 Days</option>
+                                    <option value="14">Last 14 Days</option>
+                                    <option value="30" selected>Last 30 Days</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Device Distribution -->
+                    <div class="analytics-chart-card animate-in">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Traffic by Device</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="deviceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campaign Performance Table -->
+                <div class="analytics-table-card animate-in">
+                    <div class="table-header">
+                        <h3 class="chart-title">Campaign Performance Comparison</h3>
+                        <button class="btn-secondary" onclick="exportAnalytics()">
+                            📥 Export Data
+                        </button>
+                    </div>
+                    <div class="analytics-table-container">
+                        <table class="analytics-table" id="campaignAnalyticsTable">
+                            <thead>
+                                <tr>
+                                    <th>Campaign</th>
+                                    <th>Status</th>
+                                    <th>Impressions</th>
+                                    <th>Clicks</th>
+                                    <th>CTR</th>
+                                    <th>Spent</th>
+                                    <th>CPM</th>
+                                    <th>CPC</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analyticsTableBody">
+                                <!-- Populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Geographic & Time Analytics -->
+                <div class="analytics-charts-grid">
+                    <!-- Geographic Distribution -->
+                    <div class="analytics-chart-card animate-in">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Top Performing Countries</h3>
+                        </div>
+                        <div class="geo-list" id="geoList">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Time Distribution -->
+                    <div class="analytics-chart-card animate-in">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Traffic by Hour</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="timeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Settings Section -->
+            <div id="settings-section" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title">Account Settings</h2>
+                    <p class="section-subtitle">Manage your account preferences and configuration</p>
+                </div>
+
+                <!-- Settings Navigation Tabs -->
+                <div class="settings-nav">
+                    <button class="settings-nav-item active" data-settings-tab="profile"
+                        onclick="switchSettingsTab('profile')">
+                        <span class="settings-nav-icon">👤</span>
+                        <span>Profile</span>
+                    </button>
+                    <button class="settings-nav-item" data-settings-tab="security"
+                        onclick="switchSettingsTab('security')">
+                        <span class="settings-nav-icon">🔒</span>
+                        <span>Security</span>
+                    </button>
+                    <button class="settings-nav-item" data-settings-tab="notifications"
+                        onclick="switchSettingsTab('notifications')">
+                        <span class="settings-nav-icon">🔔</span>
+                        <span>Notifications</span>
+                    </button>
+                    <button class="settings-nav-item" data-settings-tab="billing"
+                        onclick="switchSettingsTab('billing')">
+                        <span class="settings-nav-icon">💳</span>
+                        <span>Billing</span>
+                    </button>
+                    <button class="settings-nav-item" data-settings-tab="api" onclick="switchSettingsTab('api')">
+                        <span class="settings-nav-icon">🔌</span>
+                        <span>API</span>
+                    </button>
+                </div>
+
+                <!-- Settings Content Container -->
+                <div class="settings-content">
+
+                    <!-- Profile Settings -->
+                    <div id="profile-settings" class="settings-panel active">
+                        <div class="settings-card animate-in">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">Personal Information</h3>
+                                <p class="settings-card-subtitle">Update your personal details and profile information
+                                </p>
+                            </div>
+                            <div class="settings-card-body">
+                                <form id="profileForm" onsubmit="updateProfile(event)">
+                                    <!-- Profile Photo -->
+                                    <div class="profile-photo-section">
+                                        <div class="profile-photo-wrapper">
+                                            <div class="profile-photo" id="profilePhoto">
+                                                <span id="profilePhotoText">U</span>
+                                            </div>
+                                            <button type="button" class="profile-photo-edit"
+                                                onclick="changeProfilePhoto()">
+                                                📷
+                                            </button>
+                                        </div>
+                                        <div class="profile-photo-info">
+                                            <h4
+                                                style="font-size: 16px; font-weight: 600; color: #171C6B; margin-bottom: 4px;">
+                                                Profile Picture</h4>
+                                            <p style="font-size: 14px; color: #64748b; margin-bottom: 12px;">PNG, JPG up
+                                                to 5MB</p>
+                                            <button type="button" class="btn-secondary-small"
+                                                onclick="changeProfilePhoto()">
+                                                Change Photo
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="settings-form-grid">
+                                        <div class="form-group">
+                                            <label class="form-label">Full Name *</label>
+                                            <input type="text" class="form-input" id="profileName"
+                                                placeholder="John Doe" required>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="form-label">Email Address *</label>
+                                            <input type="email" class="form-input" id="profileEmail"
+                                                placeholder="john@example.com" disabled>
+                                            <span class="form-hint">Email cannot be changed</span>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="form-label">Company Name</label>
+                                            <input type="text" class="form-input" id="profileCompany"
+                                                placeholder="Your Company">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="form-label">Phone Number</label>
+                                            <input type="tel" class="form-input" id="profilePhone"
+                                                placeholder="+1 (555) 123-4567">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="form-label">Country</label>
+                                            <select class="form-input form-select" id="profileCountry">
+                                                <option value="">Select Country</option>
+                                                <option value="US">United States</option>
+                                                <option value="UK">United Kingdom</option>
+                                                <option value="CA">Canada</option>
+                                                <option value="AU">Australia</option>
+                                                <option value="DE">Germany</option>
+                                                <option value="FR">France</option>
+                                                <option value="IN">India</option>
+                                                <option value="PK">Pakistan</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="form-label">Time Zone</label>
+                                            <select class="form-input form-select" id="profileTimezone">
+                                                <option value="UTC">UTC (GMT+0:00)</option>
+                                                <option value="EST">EST (GMT-5:00)</option>
+                                                <option value="PST">PST (GMT-8:00)</option>
+                                                <option value="GMT">GMT (GMT+0:00)</option>
+                                                <option value="CET">CET (GMT+1:00)</option>
+                                                <option value="IST">IST (GMT+5:30)</option>
+                                                <option value="PKT">PKT (GMT+5:00)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="settings-form-actions">
+                                        <button type="button" class="btn-secondary"
+                                            onclick="resetProfileForm()">Cancel</button>
+                                        <button type="submit" class="btn-primary">
+                                            <span id="profileSaveText">Save Changes</span>
+                                            <span id="profileSaveSpinner" class="spinner" style="display: none;"></span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Account Information -->
+                        <div class="settings-card animate-in">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">Account Information</h3>
+                                <p class="settings-card-subtitle">Your account details and membership status</p>
+                            </div>
+                            <div class="settings-card-body">
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <span class="info-label">Account Type</span>
+                                        <span class="info-value" id="accountType">Advertiser</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Member Since</span>
+                                        <span class="info-value" id="memberSince">-</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Account Status</span>
+                                        <span class="info-value"><span
+                                                class="status-badge status-active">Active</span></span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Last Login</span>
+                                        <span class="info-value" id="lastLogin">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Settings -->
+                    <div id="security-settings" class="settings-panel">
+                        <div class="settings-card animate-in">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">Change Password</h3>
+                                <p class="settings-card-subtitle">Update your password to keep your account secure</p>
+                            </div>
+                            <div class="settings-card-body">
+                                <form id="passwordForm" onsubmit="changePassword(event)">
+                                    <div class="form-group">
+                                        <label class="form-label">Current Password *</label>
+                                        <input type="password" class="form-input" id="currentPassword"
+                                            placeholder="Enter current password" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">New Password *</label>
+                                        <input type="password" class="form-input" id="newPassword"
+                                            placeholder="Enter new password" required minlength="6">
+                                        <span class="form-hint">Minimum 6 characters</span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Confirm New Password *</label>
+                                        <input type="password" class="form-input" id="confirmPassword"
+                                            placeholder="Confirm new password" required>
+                                    </div>
+
+                                    <div class="password-strength">
+                                        <div class="password-strength-label">Password Strength:</div>
+                                        <div class="password-strength-bar">
+                                            <div class="password-strength-fill" id="passwordStrengthFill"></div>
+                                        </div>
+                                        <div class="password-strength-text" id="passwordStrengthText">Enter a password
+                                        </div>
+                                    </div>
+
+                                    <div class="settings-form-actions">
+                                        <button type="button" class="btn-secondary"
+                                            onclick="resetPasswordForm()">Cancel</button>
+                                        <button type="submit" class="btn-primary">
+                                            <span id="passwordSaveText">Update Password</span>
+                                            <span id="passwordSaveSpinner" class="spinner"
+                                                style="display: none;"></span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Two-Factor Authentication -->
+                        <div class="settings-card animate-in">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">Two-Factor Authentication</h3>
+                                <p class="settings-card-subtitle">Add an extra layer of security to your account</p>
+                            </div>
+                            <div class="settings-card-body">
+                                <div class="feature-box">
+                                    <div class="feature-icon">🔐</div>
+                                    <div class="feature-content">
+                                        <h4 class="feature-title">Enable 2FA</h4>
+                                        <p class="feature-description">Protect your account with two-factor
+                                            authentication using an authenticator app</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="toggle2FA" onchange="toggle2FA(this)">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Active Sessions -->
+                        <div class="settings-card animate-in">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">Active Sessions</h3>
+                                <p class="settings-card-subtitle">Manage your active sessions and devices</p>
+                            </div>
+                            <div class="settings-card-body">
+                                <div class="sessions-list" id="sessionsList">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notification Settings -->
+                    <div id="notifications-settings" class="settings-panel">
+                        <div class="settings-card animate-in">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">Email Notifications</h3>
+                                <p class="settings-card-subtitle">Choose what updates you want to receive via email</p>
+                            </div>
+                            <div class="settings-card-body">
+                                <div class="notification-items">
+                                    <div class="notification-item">
+                                        <div class="notification-info">
+                                            <h4 class="notification-title">Campaign Updates</h4>
+                                            <p class="notification-description">Get notified when your campaigns start,
+                                                pause, or complete</p>
+                                        </div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="notifCampaigns" checked
+                                                onchange="saveNotificationSettings()">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="notification-item">
+                                        <div class="notification-info">
+                                            <h4 class="notification-title">Performance Alerts</h4>
+                                            <p class="notification-description">Receive alerts about significant changes
+                                                in campaign performance</p>
+                                        </div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="notifPerformance" checked
+                                                onchange="saveNotificationSettings()">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="notification-item">
+                                        <div class="notification-info">
+                                            <h4 class="notification-title">Budget Alerts</h4>
+                                            <p class="notification-description">Get notified when your campaign budget
+                                                reaches certain thresholds</p>
+                                        </div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="notifBudget" checked
+                                                onchange="saveNotificationSettings()">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="notification-item">
+                                        <div class="notification-info">
+                                            <h4 class="notification-title">Weekly Reports</h4>
+                                            <p class="notification-description">Receive weekly summary reports of all
+                                                your campaigns</p>
+                                        </div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="notifWeekly"
+                                                onchange="saveNotificationSettings()">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="notification-item">
+                                        <div class="notification-info">
+                                            <h4 class="notification-title">Marketing & Updates</h4>
+                                            <p class="notification-description">Receive news about new features, tips,
+                                                and platform updates</p>
+                                        </div>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="notifMarketing"
+                                                onchange="saveNotificationSettings()">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Push Notifications -->
+                        <div class="settings-card animate-in">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">Push Notifications</h3>
+                                <p class="settings-card-subtitle">Manage browser push notifications</p>
+                            </div>
+                            <div class="settings-card-body">
+                                <div class="feature-box">
+                                    <div class="feature-icon">🔔</div>
+                                    <div class="feature-content">
+                                        <h4 class="feature-title">Browser Notifications</h4>
+                                        <p class="feature-description">Get instant notifications in your browser for
+                                            important updates</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="togglePush" onchange="togglePushNotifications(this)">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Billing Settings -->
+                    <div id="billing-settings" class="settings-panel">
+                        <!-- Balance Card -->
+                        <div class="settings-card animate-in">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">Account Balance</h3>
+                                <p class="settings-card-subtitle">Current balance and transaction history</p>
+                            </div>
+                            <div class="settings-card-body">
+                                <div class="balance-display">
+                                    <div class="balance-amount">
+                                        <span class="balance-label">Available Balance</span>
+                                        <span class="balance-value" id="settingsBalance">$0.00</span>
+                                    </div>
+                                    <button class="btn-primary" onclick="showAddFundsModal()">
+                                        💰 Add Funds
+                                    </button>
+                                </div>
+
+                                <div class="balance-info">
+                                    <div class="balance-info-item">
+                                        <span class="balance-info-icon">📊</span>
+                                        <div>
+                                            <div class="balance-info-label">Total Spent</div>
+                                            <div class="balance-info-value" id="totalSpentBilling">$0.00</div>
+                                        </div>
+                                    </div>
+                                    <div class="balance-info-item">
+                                        <span class="balance-info-icon">🎯</span>
+                                        <div>
+                                            <div class="balance-info-label">Active Campaigns</div>
+                                            <div class="balance-info-value" id="activeCampaignsBilling">0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment Methods -->
+                        <div class="settings-card animate-in">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">Payment Methods</h3>
+                                <p class="settings-card-subtitle">Manage your payment methods for deposits</p>
+                            </div>
+                            <div class="settings-card-body">
+                                <div class="payment-methods" id="paymentMethodsList">
+                                    <div class="payment-method-item">
+                                        <div class="payment-method-icon">💳</div>
+                                        <div class="payment-method-info">
+                                            <div class="payment-method-name">Visa ending in 4242</div>
+                                            <div class="payment-method-details">Expires 12/2025 • Primary</div>
+                                        </div>
+                                        <button class="btn-text danger"
+                                            onclick="removePaymentMethod('1')">Remove</button>
+                                    </div>
+                                </div>
+                                <button class="btn-secondary" onclick="addPaymentMethod()" style="margin-top: 16px;">
+                                    ➕ Add Payment Method
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Transaction History -->
+                        <div class="settings-card animate-in">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">Transaction History</h3>
+                                <p class="settings-card-subtitle">View your recent transactions and invoices</p>
+                            </div>
+                            <div class="settings-card-body">
+                                <div class="transactions-list" id="transactionsList">
+                                    <div class="transaction-item">
+                                        <div class="transaction-icon success">+</div>
+                                        <div class="transaction-info">
+                                            <div class="transaction-title">Account Deposit</div>
+                                            <div class="transaction-date">Dec 28, 2024 • 3:45 PM</div>
+                                        </div>
+                                        <div class="transaction-amount success">+$500.00</div>
+                                    </div>
+                                    <div class="transaction-item">
+                                        <div class="transaction-icon">-</div>
+                                        <div class="transaction-info">
+                                            <div class="transaction-title">Campaign: Holiday Sale 2024</div>
+                                            <div class="transaction-date">Dec 27, 2024 • 11:20 AM</div>
+                                        </div>
+                                        <div class="transaction-amount">-$150.00</div>
+                                    </div>
+                                    <div class="transaction-item">
+                                        <div class="transaction-icon success">+</div>
+                                        <div class="transaction-info">
+                                            <div class="transaction-title">Account Deposit</div>
+                                            <div class="transaction-date">Dec 25, 2024 • 9:15 AM</div>
+                                        </div>
+                                        <div class="transaction-amount success">+$1,000.00</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- API Settings -->
+                    <div id="api-settings" class="settings-panel">
+                        <div class="settings-card animate-in">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">API Keys</h3>
+                                <p class="settings-card-subtitle">Manage your API keys for programmatic access</p>
+                            </div>
+                            <div class="settings-card-body">
+                                <div class="api-keys-list" id="apiKeysList">
+                                    <div class="api-key-item">
+                                        <div class="api-key-info">
+                                            <div class="api-key-name">Production Key</div>
+                                            <div class="api-key-value">
+                                                <code id="apiKey1">••••••••••••••••••••••••••••</code>
+                                                <button class="btn-icon"
+                                                    onclick="toggleAPIKey('apiKey1', 'pk_live_51234567890abcdefghijklmnopqrstuvwxyz')"
+                                                    title="Show/Hide">
+                                                    👁️
+                                                </button>
+                                                <button class="btn-icon"
+                                                    onclick="copyToClipboard('pk_live_51234567890abcdefghijklmnopqrstuvwxyz')"
+                                                    title="Copy">
+                                                    📋
+                                                </button>
+                                            </div>
+                                            <div class="api-key-date">Created on Dec 15, 2024 • Last used 2 hours ago
+                                            </div>
+                                        </div>
+                                        <button class="btn-text danger" onclick="revokeAPIKey('1')">Revoke</button>
+                                    </div>
+                                </div>
+                                <button class="btn-secondary" onclick="generateNewAPIKey()" style="margin-top: 16px;">
+                                    🔑 Generate New API Key
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- API Documentation -->
+                        <div class="settings-card animate-in">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">API Documentation</h3>
+                                <p class="settings-card-subtitle">Resources to integrate with our API</p>
+                            </div>
+                            <div class="settings-card-body">
+                                <div class="api-docs-grid">
+                                    <a href="#" class="api-doc-card" onclick="openAPIDoc('quickstart'); return false;">
+                                        <div class="api-doc-icon">🚀</div>
+                                        <div class="api-doc-title">Quick Start Guide</div>
+                                        <div class="api-doc-description">Get started with the API in minutes</div>
+                                    </a>
+                                    <a href="#" class="api-doc-card" onclick="openAPIDoc('reference'); return false;">
+                                        <div class="api-doc-icon">📖</div>
+                                        <div class="api-doc-title">API Reference</div>
+                                        <div class="api-doc-description">Complete API endpoint documentation</div>
+                                    </a>
+                                    <a href="#" class="api-doc-card" onclick="openAPIDoc('examples'); return false;">
+                                        <div class="api-doc-icon">💡</div>
+                                        <div class="api-doc-title">Code Examples</div>
+                                        <div class="api-doc-description">Sample code in multiple languages</div>
+                                    </a>
+                                    <a href="#" class="api-doc-card" onclick="openAPIDoc('webhooks'); return false;">
+                                        <div class="api-doc-icon">🔗</div>
+                                        <div class="api-doc-title">Webhooks</div>
+                                        <div class="api-doc-description">Real-time event notifications</div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Webhook Configuration -->
+                        <div class="settings-card animate-in">
+                            <div class="settings-card-header">
+                                <h3 class="settings-card-title">Webhooks</h3>
+                                <p class="settings-card-subtitle">Configure webhook endpoints for real-time updates</p>
+                            </div>
+                            <div class="settings-card-body">
+                                <div class="webhooks-list" id="webhooksList">
+                                    <div class="empty-state">
+                                        <div class="empty-state-icon">🔗</div>
+                                        <div class="empty-state-title">No webhooks configured</div>
+                                        <div class="empty-state-description">Add a webhook endpoint to receive real-time
+                                            notifications</div>
+                                    </div>
+                                </div>
+                                <button class="btn-secondary" onclick="addWebhook()" style="margin-top: 16px;">
+                                    ➕ Add Webhook
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!-- Add Funds Modal -->
+<div class="modal-overlay" id="addFundsModal">
+    <div class="add-funds-modal">
+        <div class="modal-header">
+            <button class="modal-close" onclick="closeAddFundsModal()">×</button>
+            <h2 class="modal-title">Add Funds to Account</h2>
+            <p class="modal-subtitle">Choose your payment method and add funds securely</p>
+        </div>
+        
+        <div class="modal-content">
+            <!-- Amount Selection -->
+            <div class="funds-section">
+                <h3 class="funds-section-title">
+                    <span class="section-icon">💰</span>
+                    Select Amount
+                </h3>
+                
+                <div class="amount-grid">
+                    <button class="amount-card" data-amount="100" onclick="selectAmount(this)">
+                        <div class="amount-value">$100</div>
+                        <div class="amount-label">Starter</div>
+                    </button>
+                    <button class="amount-card popular" data-amount="500" onclick="selectAmount(this)">
+                        <div class="amount-popular-badge">Most Popular</div>
+                        <div class="amount-value">$500</div>
+                        <div class="amount-label">Professional</div>
+                    </button>
+                    <button class="amount-card" data-amount="1000" onclick="selectAmount(this)">
+                        <div class="amount-value">$1,000</div>
+                        <div class="amount-label">Business</div>
+                    </button>
+                    <button class="amount-card" data-amount="custom" onclick="selectAmount(this)">
+                        <div class="amount-value">Custom</div>
+                        <div class="amount-label">Enter amount</div>
+                    </button>
+                </div>
+
+                <!-- Custom Amount Input -->
+                <div class="custom-amount-input" id="customAmountInput" style="display: none;">
+                    <label class="form-label">Enter Custom Amount (Min: $100)</label>
+                    <div class="amount-input-wrapper">
+                        <span class="amount-currency">$</span>
+                        <input type="number" class="form-input amount-input" id="customAmountValue" 
+                               placeholder="Enter amount" min="100" step="1" oninput="validateCustomAmount()">
+                    </div>
+                    <span class="form-hint" id="customAmountError"></span>
+                </div>
+            </div>
+
+            <!-- Payment Method Selection -->
+            <div class="funds-section">
+                <h3 class="funds-section-title">
+                    <span class="section-icon">💳</span>
+                    Payment Method
+                </h3>
+
+                <div class="payment-methods-grid">
+                    <button class="payment-method-card active" data-method="stripe" onclick="selectPaymentMethod(this)">
+                        <div class="payment-method-logo">
+                            <svg viewBox="0 0 60 25" xmlns="http://www.w3.org/2000/svg" width="60" height="25">
+                                <path fill="#635bff" d="M59.64 14.28h-8.06c.19 1.93 1.6 2.55 3.2 2.55 1.64 0 2.96-.37 4.05-.95v3.32a8.33 8.33 0 0 1-4.56 1.1c-4.01 0-6.83-2.5-6.83-7.48 0-4.19 2.39-7.52 6.3-7.52 3.92 0 5.96 3.28 5.96 7.5 0 .4-.04 1.26-.06 1.48zm-5.92-5.62c-1.03 0-2.17.73-2.17 2.58h4.25c0-1.85-1.07-2.58-2.08-2.58zM40.95 20.3c-1.44 0-2.32-.6-2.9-1.04l-.02 4.63-4.12.87V5.57h3.76l.08 1.02a4.7 4.7 0 0 1 3.23-1.29c2.9 0 5.62 2.6 5.62 7.4 0 5.23-2.7 7.6-5.65 7.6zM40 8.95c-.95 0-1.54.34-1.97.81l.02 6.12c.4.44.98.78 1.95.78 1.52 0 2.54-1.65 2.54-3.87 0-2.15-1.04-3.84-2.54-3.84zM28.24 5.57h4.13v14.44h-4.13V5.57zm0-4.7L32.37 0v3.36l-4.13.88V.88zm-4.32 9.35v9.79H19.8V5.57h3.7l.12 1.22c1-1.77 3.07-1.41 3.62-1.22v3.79c-.52-.17-2.29-.43-3.32.86zm-8.55 4.72c0 2.43 2.6 1.68 3.12 1.46v3.36c-.55.3-1.54.54-2.89.54a4.15 4.15 0 0 1-4.27-4.24l.01-13.17 4.02-.86v3.54h3.14V9.1h-3.13v5.85zm-4.91.7c0 2.97-2.31 4.66-5.73 4.66a11.2 11.2 0 0 1-4.46-.93v-3.93c1.38.75 3.1 1.31 4.46 1.31.92 0 1.53-.24 1.53-1C6.26 13.77 0 14.51 0 9.95 0 7.04 2.28 5.3 5.62 5.3c1.36 0 2.72.2 4.09.75v3.88a9.23 9.23 0 0 0-4.1-1.06c-.86 0-1.44.25-1.44.93 0 1.85 6.29.97 6.29 5.88z"/>
+                            </svg>
+                        </div>
+                        <div class="payment-method-name">Credit/Debit Card</div>
+                        <div class="payment-method-desc">Visa, Mastercard, Amex</div>
+                    </button>
+
+                    <button class="payment-method-card" data-method="paypal" onclick="selectPaymentMethod(this)">
+                        <div class="payment-method-logo">
+                            <svg viewBox="0 0 124 33" xmlns="http://www.w3.org/2000/svg" width="80" height="21">
+                                <path fill="#253B80" d="M46.211 6.749h-6.839a.95.95 0 0 0-.939.802l-2.766 17.537a.57.57 0 0 0 .564.658h3.265a.95.95 0 0 0 .939-.803l.746-4.73a.95.95 0 0 1 .938-.803h2.165c4.505 0 7.105-2.18 7.784-6.5.306-1.89.013-3.375-.872-4.415-.972-1.142-2.696-1.746-4.985-1.746zM47 13.154c-.374 2.454-2.249 2.454-4.062 2.454h-1.032l.724-4.583a.57.57 0 0 1 .563-.481h.473c1.235 0 2.4 0 3.002.704.359.42.469 1.044.332 1.906zM66.654 13.075h-3.275a.57.57 0 0 0-.563.481l-.145.916-.229-.332c-.709-1.029-2.29-1.373-3.868-1.373-3.619 0-6.71 2.741-7.312 6.586-.313 1.918.132 3.752 1.22 5.03.998 1.176 2.426 1.666 4.125 1.666 2.916 0 4.533-1.875 4.533-1.875l-.146.91a.57.57 0 0 0 .562.66h2.95a.95.95 0 0 0 .939-.803l1.77-11.209a.568.568 0 0 0-.561-.657zm-4.565 6.374c-.316 1.871-1.801 3.127-3.695 3.127-.951 0-1.711-.305-2.199-.883-.484-.574-.668-1.391-.514-2.301.295-1.855 1.805-3.152 3.67-3.152.93 0 1.686.309 2.184.892.499.589.697 1.411.554 2.317zM84.096 13.075h-3.291a.954.954 0 0 0-.787.417l-4.539 6.686-1.924-6.425a.953.953 0 0 0-.912-.678h-3.234a.57.57 0 0 0-.541.754l3.625 10.638-3.408 4.811a.57.57 0 0 0 .465.9h3.287a.949.949 0 0 0 .781-.408l10.946-15.8a.57.57 0 0 0-.468-.895z"/>
+                                <path fill="#179BD7" d="M94.992 6.749h-6.84a.95.95 0 0 0-.938.802l-2.766 17.537a.569.569 0 0 0 .562.658h3.51a.665.665 0 0 0 .656-.562l.785-4.971a.95.95 0 0 1 .938-.803h2.164c4.506 0 7.105-2.18 7.785-6.5.307-1.89.012-3.375-.873-4.415-.971-1.142-2.694-1.746-4.983-1.746zm.789 6.405c-.373 2.454-2.248 2.454-4.062 2.454h-1.031l.725-4.583a.568.568 0 0 1 .562-.481h.473c1.234 0 2.4 0 3.002.704.359.42.468 1.044.331 1.906zM115.434 13.075h-3.273a.567.567 0 0 0-.562.481l-.145.916-.23-.332c-.709-1.029-2.289-1.373-3.867-1.373-3.619 0-6.709 2.741-7.311 6.586-.312 1.918.131 3.752 1.219 5.03 1 1.176 2.426 1.666 4.125 1.666 2.916 0 4.533-1.875 4.533-1.875l-.146.91a.57.57 0 0 0 .564.66h2.949a.95.95 0 0 0 .938-.803l1.771-11.209a.571.571 0 0 0-.565-.657zm-4.565 6.374c-.314 1.871-1.801 3.127-3.695 3.127-.949 0-1.711-.305-2.199-.883-.484-.574-.666-1.391-.514-2.301.297-1.855 1.805-3.152 3.67-3.152.93 0 1.686.309 2.184.892.501.589.699 1.411.554 2.317zM119.295 7.23l-2.807 17.858a.569.569 0 0 0 .562.658h2.822c.469 0 .867-.34.939-.803l2.768-17.536a.57.57 0 0 0-.562-.659h-3.16a.571.571 0 0 0-.562.482z"/>
+                                <path fill="#253B80" d="M7.266 29.154l.523-3.322-1.165-.027H1.061L4.927 1.292a.316.316 0 0 1 .314-.268h9.38c3.114 0 5.263.648 6.385 1.927.526.6.861 1.227 1.023 1.917.17.724.173 1.589.007 2.644l-.012.077v.676l.526.298a3.69 3.69 0 0 1 1.065.812c.45.513.741 1.165.864 1.938.127.795.085 1.741-.123 2.812-.24 1.232-.628 2.305-1.152 3.183a6.547 6.547 0 0 1-1.825 2c-.696.494-1.523.869-2.458 1.109-.906.236-1.939.355-3.072.355h-.73c-.522 0-1.029.188-1.427.525a2.21 2.21 0 0 0-.744 1.328l-.055.299-.924 5.855-.042.215c-.011.068-.03.102-.058.125a.155.155 0 0 1-.096.035H7.266z"/>
+                                <path fill="#179BD7" d="M23.048 7.667c-.028.179-.06.362-.096.55-1.237 6.351-5.469 8.545-10.874 8.545H9.326c-.661 0-1.218.48-1.321 1.132L6.596 26.83l-.399 2.533a.704.704 0 0 0 .695.814h4.881c.578 0 1.069-.42 1.16-.99l.048-.248.919-5.832.059-.32c.09-.572.582-.992 1.16-.992h.73c4.729 0 8.431-1.92 9.513-7.476.452-2.321.218-4.259-.978-5.622a4.667 4.667 0 0 0-1.336-1.03z"/>
+                                <path fill="#222D65" d="M21.754 7.151a9.757 9.757 0 0 0-1.203-.267 15.284 15.284 0 0 0-2.426-.177h-7.352a1.172 1.172 0 0 0-1.159.992L8.05 17.605l-.045.289a1.336 1.336 0 0 1 1.321-1.132h2.752c5.405 0 9.637-2.195 10.874-8.545.037-.188.068-.371.096-.55a6.594 6.594 0 0 0-1.017-.429 9.045 9.045 0 0 0-.277-.087z"/>
+                                <path fill="#253B80" d="M9.614 7.699a1.169 1.169 0 0 1 1.159-.991h7.352c.871 0 1.684.057 2.426.177a9.757 9.757 0 0 1 1.481.353c.365.121.704.264 1.017.429.368-2.347-.003-3.945-1.272-5.392C20.378.682 17.853 0 14.622 0h-9.38c-.66 0-1.223.48-1.325 1.133L.01 25.898a.806.806 0 0 0 .795.932h5.791l1.454-9.225 1.564-9.906z"/>
+                            </svg>
+                        </div>
+                        <div class="payment-method-name">PayPal</div>
+                        <div class="payment-method-desc">Fast & Secure</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stripe Card Form -->
+            <div class="funds-section" id="stripeSection">
+                <h3 class="funds-section-title">
+                    <span class="section-icon">🔒</span>
+                    Card Information
+                </h3>
+                
+                <form id="stripePaymentForm">
+                    <div class="form-group">
+                        <label class="form-label">Card Details</label>
+                        <div id="card-element" class="stripe-card-element">
+                            <!-- Stripe Card Element will be inserted here -->
+                        </div>
+                        <div id="card-errors" class="card-errors"></div>
+                    </div>
+
+                    <div class="security-badges">
+                        <div class="security-badge">
+                            <span>🔒</span>
+                            <span>256-bit SSL Encrypted</span>
+                        </div>
+                        <div class="security-badge">
+                            <span>✓</span>
+                            <span>PCI DSS Compliant</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- PayPal Container -->
+            <div class="funds-section" id="paypalSection" style="display: none;">
+                <h3 class="funds-section-title">
+                    <span class="section-icon">🔒</span>
+                    Complete Payment
+                </h3>
+                
+                <div id="paypal-button-container"></div>
+                
+                <div class="security-badges">
+                    <div class="security-badge">
+                        <span>🔒</span>
+                        <span>Buyer Protection</span>
+                    </div>
+                    <div class="security-badge">
+                        <span>✓</span>
+                        <span>Secure Checkout</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Summary -->
+            <div class="payment-summary">
+                <div class="summary-row">
+                    <span class="summary-label">Amount to Add:</span>
+                    <span class="summary-value" id="summaryAmount">$0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Processing Fee:</span>
+                    <span class="summary-value" id="summaryFee">$0.00</span>
+                </div>
+                <div class="summary-row total">
+                    <span class="summary-label">Total:</span>
+                    <span class="summary-value" id="summaryTotal">$0.00</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-actions" id="stripeActions">
+                <button type="button" class="btn-secondary" onclick="closeAddFundsModal()">
+                    Cancel
+                </button>
+                <button type="button" class="btn-primary" id="submitPaymentBtn" onclick="processStripePayment()" disabled>
+                    <span id="paymentBtnText">Add Funds</span>
+                    <span id="paymentBtnSpinner" class="spinner" style="display: none;"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
         </main>
 
         <!-- Campaign Creation Modal -->
@@ -1917,7 +4337,7 @@
                     <h2 class="modal-title">Create New Campaign</h2>
                     <p class="modal-subtitle">Set up your advertising campaign in just a few simple steps</p>
                 </div>
-                
+
                 <div class="modal-content">
                     <form id="campaignForm">
                         <!-- Basic Information -->
@@ -1926,17 +4346,19 @@
                                 <span class="section-icon">📋</span>
                                 Campaign Details
                             </h3>
-                            
+
                             <div class="form-group">
                                 <label class="form-label">Campaign Name *</label>
-                                <input type="text" class="form-input" name="campaignName" placeholder="Enter campaign name" required>
+                                <input type="text" class="form-input" name="campaignName"
+                                    placeholder="Enter campaign name" required>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label class="form-label">Landing Page URL *</label>
-                                <input type="url" class="form-input" name="landingUrl" placeholder="https://example.com" required>
+                                <input type="url" class="form-input" name="landingUrl" placeholder="https://example.com"
+                                    required>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label class="form-label">Campaign Type *</label>
                                 <select class="form-input form-select" name="campaignType" required>
@@ -1949,7 +4371,8 @@
 
                             <div class="form-group">
                                 <label class="form-label">Campaign Description</label>
-                                <textarea class="form-input form-textarea" name="description" placeholder="Describe your campaign objectives..."></textarea>
+                                <textarea class="form-input form-textarea" name="description"
+                                    placeholder="Describe your campaign objectives..."></textarea>
                             </div>
                         </div>
 
@@ -1959,9 +4382,10 @@
                                 <span class="section-icon">🚀</span>
                                 Select Traffic Package
                             </h3>
-                            
+
                             <div class="traffic-packages">
-                                <div class="traffic-package" data-amount="10000" data-price="150" onclick="selectPackage(this)">
+                                <div class="traffic-package" data-amount="10000" data-price="150"
+                                    onclick="selectPackage(this)">
                                     <div class="package-amount">10K</div>
                                     <div class="package-price">$150</div>
                                     <div class="package-cpm">$15.00 CPM</div>
@@ -1976,8 +4400,9 @@
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <div class="traffic-package popular" data-amount="50000" data-price="650" onclick="selectPackage(this)">
+
+                                <div class="traffic-package popular" data-amount="50000" data-price="650"
+                                    onclick="selectPackage(this)">
                                     <div class="package-amount">50K</div>
                                     <div class="package-price">$650</div>
                                     <div class="package-cpm">$13.00 CPM</div>
@@ -1992,8 +4417,9 @@
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <div class="traffic-package" data-amount="100000" data-price="1200" onclick="selectPackage(this)">
+
+                                <div class="traffic-package" data-amount="100000" data-price="1200"
+                                    onclick="selectPackage(this)">
                                     <div class="package-amount">100K</div>
                                     <div class="package-price">$1,200</div>
                                     <div class="package-cpm">$12.00 CPM</div>
@@ -2008,8 +4434,9 @@
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <div class="traffic-package" data-amount="custom" data-price="0" onclick="selectPackage(this)">
+
+                                <div class="traffic-package" data-amount="custom" data-price="0"
+                                    onclick="selectPackage(this)">
                                     <div class="package-amount">Custom</div>
                                     <div class="package-price">Custom</div>
                                     <div class="package-cpm">Flexible CPM</div>
@@ -2025,13 +4452,14 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Custom Traffic Input -->
                             <div class="custom-traffic" id="customTrafficSection">
                                 <div class="traffic-calculator">
                                     <div class="form-group">
                                         <label class="form-label">Traffic Amount</label>
-                                        <input type="number" class="form-input" id="customAmount" placeholder="Enter impressions" oninput="calculateCustomPrice()">
+                                        <input type="number" class="form-input" id="customAmount"
+                                            placeholder="Enter impressions" oninput="calculateCustomPrice()">
                                     </div>
                                     <div style="text-align: center; color: #64748b; font-size: 24px;">×</div>
                                     <div class="calc-result">
@@ -2051,7 +4479,7 @@
                                 <span class="section-icon">🎯</span>
                                 Targeting Options
                             </h3>
-                            
+
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                                 <div class="form-group">
                                     <label class="form-label">Target Countries</label>
@@ -2064,7 +4492,7 @@
                                         <option value="de">Germany</option>
                                     </select>
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label class="form-label">Device Type</label>
                                     <select class="form-input form-select" name="deviceType">
@@ -2075,7 +4503,7 @@
                                     </select>
                                 </div>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label class="form-label">Campaign Duration</label>
                                 <select class="form-input form-select" name="campaignDuration">
@@ -2128,7 +4556,7 @@
     <script>
         // API Configuration
         const API_BASE = window.location.origin + '/api';
-        
+
         // Global variables
         let selectedPackage = null;
         let campaigns = [];
@@ -2137,14 +4565,14 @@
         let authToken = null;
 
         // Initialize application
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             initializeApp();
         });
 
         async function initializeApp() {
             // Check authentication first
             const isAuthenticated = await checkAuthentication();
-            
+
             if (!isAuthenticated) {
                 redirectToLogin();
                 return;
@@ -2168,13 +4596,13 @@
             try {
                 authToken = localStorage.getItem('authToken');
                 const userData = localStorage.getItem('userData');
-                
+
                 if (!authToken || !userData) {
                     return false;
                 }
 
                 currentUser = JSON.parse(userData);
-                
+
                 // Verify token with server
                 const response = await apiCall('/auth/me');
                 if (response.success) {
@@ -2182,7 +4610,7 @@
                     localStorage.setItem('userData', JSON.stringify(currentUser));
                     return true;
                 }
-                
+
                 return false;
             } catch (error) {
                 console.error('Authentication check failed:', error);
@@ -2207,7 +4635,7 @@
             document.getElementById('userName').textContent = currentUser.name;
             document.getElementById('welcomeUserName').textContent = currentUser.name.split(' ')[0];
             document.getElementById('userBalance').textContent = `Balance: $${(currentUser.balance || 0).toFixed(2)} USD`;
-            
+
             // Update user avatar (first letter of name)
             const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
             document.getElementById('userAvatar').textContent = initials;
@@ -2216,13 +4644,13 @@
         function setGreeting() {
             const hour = new Date().getHours();
             let greeting = 'Good evening';
-            
+
             if (hour < 12) {
                 greeting = 'Good morning';
             } else if (hour < 18) {
                 greeting = 'Good afternoon';
             }
-            
+
             document.getElementById('greeting').textContent = greeting;
         }
 
@@ -2243,7 +4671,7 @@
                     headers,
                     ...options
                 });
-                
+
                 if (response.status === 401) {
                     // Token expired or invalid
                     localStorage.removeItem('authToken');
@@ -2251,11 +4679,11 @@
                     redirectToLogin();
                     throw new Error('Authentication expired');
                 }
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
+
                 return await response.json();
             } catch (error) {
                 console.error('API call failed:', error);
@@ -2288,17 +4716,17 @@
             const campaignsLoading = document.getElementById('campaignsLoading');
             const noCampaigns = document.getElementById('noCampaigns');
             const campaignsList = document.getElementById('campaignsList');
-            
+
             campaignsLoading.style.display = 'block';
             noCampaigns.style.display = 'none';
             campaignsList.innerHTML = '';
-            
+
             try {
                 const response = await apiCall('/campaigns');
                 campaigns = response.campaigns || [];
-                
+
                 campaignsLoading.style.display = 'none';
-                
+
                 if (campaigns.length === 0) {
                     noCampaigns.style.display = 'block';
                 } else {
@@ -2313,7 +4741,7 @@
         function displayCampaigns(campaignList) {
             const campaignsList = document.getElementById('campaignsList');
             campaignsList.innerHTML = '';
-            
+
             campaignList.forEach(campaign => {
                 const campaignCard = createCampaignCard(campaign);
                 campaignsList.appendChild(campaignCard);
@@ -2323,10 +4751,10 @@
         function createCampaignCard(campaign) {
             const card = document.createElement('div');
             card.className = 'campaign-card';
-            
+
             const statusClass = `status-${campaign.status}`;
             const statusText = campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1);
-            
+
             card.innerHTML = `
                 <div class="campaign-header">
                     <div>
@@ -2357,15 +4785,15 @@
                 
                 <div class="campaign-actions">
                     <button class="action-btn" onclick="viewCampaign('${campaign._id}')">View</button>
-                    ${campaign.status === 'active' ? 
-                        `<button class="action-btn" onclick="pauseCampaign('${campaign._id}')">Pause</button>` :
-                        campaign.status === 'paused' ? 
+                    ${campaign.status === 'active' ?
+                    `<button class="action-btn" onclick="pauseCampaign('${campaign._id}')">Pause</button>` :
+                    campaign.status === 'paused' ?
                         `<button class="action-btn" onclick="resumeCampaign('${campaign._id}')">Resume</button>` : ''
-                    }
+                }
                     <button class="action-btn danger" onclick="deleteCampaign('${campaign._id}')">Delete</button>
                 </div>
             `;
-            
+
             return card;
         }
 
@@ -2375,7 +4803,7 @@
                     method: 'POST',
                     body: JSON.stringify(campaignData)
                 });
-                
+
                 if (response.success) {
                     showToast('Success!', 'Campaign created successfully and will be activated shortly.', 'success');
                     await loadUserStats();
@@ -2394,7 +4822,7 @@
                     method: 'PATCH',
                     body: JSON.stringify({ status })
                 });
-                
+
                 if (response.success) {
                     showToast('Success!', `Campaign ${status} successfully.`, 'success');
                     await loadUserStats();
@@ -2410,7 +4838,7 @@
                 const response = await apiCall(`/campaigns/${campaignId}`, {
                     method: 'DELETE'
                 });
-                
+
                 if (response.success) {
                     showToast('Success!', 'Campaign deleted successfully.', 'success');
                     await loadUserStats();
@@ -2428,10 +4856,10 @@
         }
 
         // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             const dropdown = document.querySelector('.user-dropdown');
             const menu = document.getElementById('userDropdownMenu');
-            
+
             if (!dropdown.contains(e.target)) {
                 menu.classList.remove('active');
             }
@@ -2443,14 +4871,14 @@
             } catch (error) {
                 console.error('Logout API call failed:', error);
             }
-            
+
             // Clear local storage
             localStorage.removeItem('authToken');
             localStorage.removeItem('userData');
-            
+
             // Show logout message and redirect
             showToast('Logged Out', 'You have been successfully logged out.', 'success');
-            
+
             setTimeout(() => {
                 window.location.href = '/';
             }, 1500);
@@ -2488,7 +4916,7 @@
         // Navigation
         function initializeNavigation() {
             document.querySelectorAll('.nav-tab').forEach(tab => {
-                tab.addEventListener('click', function() {
+                tab.addEventListener('click', function () {
                     switchTab(this.dataset.tab);
                 });
             });
@@ -2497,22 +4925,24 @@
         function switchTab(tabName) {
             // Update nav tabs
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-            
+            const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
+
             // Show/hide sections
             document.getElementById('dashboard-section').style.display = tabName === 'dashboard' ? 'block' : 'none';
             document.getElementById('my-campaigns-section').style.display = tabName === 'my-campaigns' ? 'block' : 'none';
-            
-            // Load campaigns when switching to campaigns tab
+            document.getElementById('analytics-section').style.display = tabName === 'analytics' ? 'block' : 'none';
+            document.getElementById('settings-section').style.display = tabName === 'settings' ? 'block' : 'none';
+
+            // Load data when switching tabs
             if (tabName === 'my-campaigns') {
                 loadCampaigns();
-            }
-            
-            // Handle other tabs
-            if (tabName === 'analytics') {
-                alert('📈 Analytics Dashboard\n\nDetailed analytics and reporting features coming soon!\n\n• Campaign performance metrics\n• Conversion tracking\n• Audience insights\n• ROI analysis');
+            } else if (tabName === 'analytics') {
+                loadAnalytics();
             } else if (tabName === 'settings') {
-                alert('⚙️ Account Settings\n\nManage your account preferences:\n\n• Profile information\n• Payment methods\n• Notification settings\n• API integrations');
+                loadSettingsData();
             }
         }
 
@@ -2543,15 +4973,15 @@
         function selectPackage(element) {
             // Remove previous selection
             document.querySelectorAll('.traffic-package').forEach(pkg => pkg.classList.remove('selected'));
-            
+
             // Select current package
             element.classList.add('selected');
-            
+
             const amount = element.dataset.amount;
             const price = element.dataset.price;
-            
+
             selectedPackage = { amount, price };
-            
+
             // Show/hide custom traffic section
             const customSection = document.getElementById('customTrafficSection');
             if (amount === 'custom') {
@@ -2559,7 +4989,7 @@
             } else {
                 customSection.classList.remove('active');
             }
-            
+
             updateSummary();
         }
 
@@ -2567,9 +4997,9 @@
             const amount = document.getElementById('customAmount').value;
             const baseCPM = 12.00;
             const price = amount ? ((amount / 1000) * baseCPM).toFixed(2) : '0';
-            
+
             document.getElementById('customPrice').textContent = `$${price}`;
-            
+
             if (selectedPackage && selectedPackage.amount === 'custom') {
                 selectedPackage.price = price;
                 selectedPackage.customAmount = amount;
@@ -2582,7 +5012,7 @@
             const summaryAmount = document.getElementById('summaryAmount');
             const summaryTotal = document.getElementById('summaryTotal');
             const submitBtn = document.getElementById('submitBtn');
-            
+
             if (selectedPackage) {
                 if (selectedPackage.amount === 'custom') {
                     const customAmount = selectedPackage.customAmount || 0;
@@ -2594,7 +5024,7 @@
                     summaryAmount.textContent = `${parseInt(selectedPackage.amount).toLocaleString()} impressions`;
                     summaryTotal.textContent = `${selectedPackage.price}`;
                 }
-                
+
                 submitBtn.disabled = false;
             } else {
                 summaryPackage.textContent = 'Please select a package';
@@ -2605,23 +5035,23 @@
         }
 
         // Form submission
-        document.getElementById('campaignForm').addEventListener('submit', async function(e) {
+        document.getElementById('campaignForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-            
+
             if (!selectedPackage) {
                 showToast('Error', 'Please select a traffic package', 'error');
                 return;
             }
-            
+
             const submitBtn = document.getElementById('submitBtn');
             const submitBtnText = document.getElementById('submitBtnText');
             const submitBtnSpinner = document.getElementById('submitBtnSpinner');
-            
+
             // Show loading state
             submitBtn.disabled = true;
             submitBtnText.style.display = 'none';
             submitBtnSpinner.style.display = 'inline-block';
-            
+
             try {
                 // Collect form data
                 const formData = new FormData(this);
@@ -2635,17 +5065,17 @@
                     deviceType: formData.get('deviceType'),
                     duration: formData.get('campaignDuration')
                 };
-                
+
                 // Validate required fields
                 if (!campaignData.campaignName || !campaignData.landingUrl || !campaignData.campaignType) {
                     showToast('Error', 'Please fill in all required fields', 'error');
                     return;
                 }
-                
+
                 // Create campaign
                 await createCampaign(campaignData);
                 closeCampaignModal();
-                
+
             } catch (error) {
                 console.error('Campaign creation failed:', error);
             } finally {
@@ -2664,12 +5094,12 @@
                 <div class="toast-title">${title}</div>
                 <div class="toast-message">${message}</div>
             `;
-            
+
             document.body.appendChild(toast);
-            
+
             // Show toast
             setTimeout(() => toast.classList.add('show'), 100);
-            
+
             // Hide toast after 4 seconds
             setTimeout(() => {
                 toast.classList.remove('show');
@@ -2678,8 +5108,9 @@
         }
 
         function fillProfile() {
-            alert('👤 Profile Setup\n\nComplete your advertiser profile:\n• Business information\n• Payment methods\n• Campaign preferences\n• Account verification');
-        }
+    switchTab('settings');
+    switchSettingsTab('profile');
+}
 
         function topUpAccount() {
             alert('💳 Account Funding\n\nAdd funds securely:\n• Credit/Debit cards\n• Bank transfers\n• Cryptocurrency\n• Minimum $100 deposit');
@@ -2696,7 +5127,7 @@
             animateElements.forEach((el, index) => {
                 el.style.opacity = '0';
                 el.style.transform = 'translateY(30px)';
-                
+
                 setTimeout(() => {
                     el.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
                     el.style.opacity = '1';
@@ -2707,14 +5138,14 @@
 
         // Enhanced Navigation
         document.querySelectorAll('.nav-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
+            tab.addEventListener('click', function () {
                 document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
             });
         });
 
         // Close modal on escape key
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 closeCampaignModal();
                 document.getElementById('userDropdownMenu').classList.remove('active');
@@ -2722,7 +5153,7 @@
         });
 
         // Close modal on overlay click
-        document.getElementById('campaignModal').addEventListener('click', function(e) {
+        document.getElementById('campaignModal').addEventListener('click', function (e) {
             if (e.target === this) {
                 closeCampaignModal();
             }
@@ -2737,105 +5168,105 @@
             // Create mobile menu elements
             const header = document.querySelector('.header-content');
             const userSection = document.querySelector('.user-section');
-            
+
             // Add mobile toggle button
             const mobileToggle = document.createElement('button');
             mobileToggle.className = 'mobile-menu-toggle';
             mobileToggle.innerHTML = '☰';
             mobileToggle.setAttribute('aria-label', 'Toggle mobile menu');
-            
+
             // Insert toggle before user section
             userSection.parentNode.insertBefore(mobileToggle, userSection);
-            
+
             // Create mobile overlay and menu
             const mobileOverlay = document.createElement('div');
             mobileOverlay.className = 'mobile-nav-overlay';
-            
+
             const mobileMenu = document.createElement('div');
             mobileMenu.className = 'mobile-nav-menu';
-            
+
             const closeButton = document.createElement('button');
             closeButton.className = 'mobile-nav-close';
             closeButton.innerHTML = '×';
             closeButton.setAttribute('aria-label', 'Close mobile menu');
-            
+
             // Advertiser navigation  
-            const advertiserNavs = [
-                { text: 'Dashboard', active: true, tab: 'dashboard' },
-                { text: 'Create Campaign', action: 'campaign' },
-                { text: 'My Campaigns', tab: 'my-campaigns' },
-                { text: 'Analytics', tab: 'analytics' },
-                { text: 'Settings', tab: 'settings' }
-            ];
-            
+           const advertiserNavs = [
+    { text: 'Dashboard', active: true, tab: 'dashboard' },
+    { text: 'Create Campaign', action: 'campaign' },
+    { text: 'My Campaigns', tab: 'my-campaigns' },
+    { text: 'Analytics', tab: 'analytics' },
+    { text: 'Settings', tab: 'settings' }
+];
+
             let menuHTML = '';
             advertiserNavs.forEach(nav => {
                 menuHTML += `<a href="#" class="mobile-nav-item ${nav.active ? 'active' : ''}" data-tab="${nav.tab || ''}" data-action="${nav.action || ''}">${nav.text}</a>`;
             });
-            
+
             mobileMenu.innerHTML = menuHTML;
             mobileMenu.insertBefore(closeButton, mobileMenu.firstChild);
-            
+
             // Add to DOM
             document.body.appendChild(mobileOverlay);
             document.body.appendChild(mobileMenu);
-            
+
             // Event listeners
             mobileToggle.addEventListener('click', openMobileMenu);
             closeButton.addEventListener('click', closeMobileMenu);
             mobileOverlay.addEventListener('click', closeMobileMenu);
-            
+
             // Handle mobile nav item clicks
             const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
             mobileNavItems.forEach(item => {
                 item.addEventListener('click', handleMobileNavClick);
             });
-            
+
             function openMobileMenu() {
                 mobileOverlay.classList.add('active');
                 mobileMenu.classList.add('active');
                 document.body.style.overflow = 'hidden';
                 mobileToggle.innerHTML = '×';
             }
-            
+
             function closeMobileMenu() {
                 mobileOverlay.classList.remove('active');
                 mobileMenu.classList.remove('active');
                 document.body.style.overflow = '';
                 mobileToggle.innerHTML = '☰';
             }
-            
+
             function handleMobileNavClick(e) {
                 e.preventDefault();
-                
+
                 // Remove active class from all items
                 mobileNavItems.forEach(item => item.classList.remove('active'));
                 // Add active class to clicked item
                 e.target.classList.add('active');
-                
+
                 // Close menu
                 closeMobileMenu();
-                
+
                 // Handle navigation logic
                 const tab = e.target.dataset.tab;
                 const action = e.target.dataset.action;
-                
+
                 if (action === 'campaign') {
                     openCampaignModal();
                 } else if (tab) {
                     switchTab(tab);
                 }
             }
-            
+
             // Handle escape key
-            document.addEventListener('keydown', function(e) {
+            document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') {
                     closeMobileMenu();
                 }
             });
-            
+
             // Handle window resize
-            window.addEventListener('resize', function() {
+            window.addEventListener('resize', function () {
                 if (window.innerWidth > 1024) {
                     closeMobileMenu();
                 }
@@ -2846,7 +5277,7 @@
         function initMobileDashboard() {
             // Wait for DOM to be ready
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', function() {
+                document.addEventListener('DOMContentLoaded', function () {
                     initMobileNavigation();
                 });
             } else {
@@ -2880,6 +5311,1236 @@
                 console.log('Auth check failed:', error.message);
             }
         }, 300000); // Check every 5 minutes
+        /* ==========================================================================
+   ANALYTICS FUNCTIONS
+   ========================================================================== */
+
+        let performanceChart = null;
+        let deviceChart = null;
+        let timeChart = null;
+
+        // Mock data generator for analytics
+        function generateAnalyticsData() {
+            const activeCampaigns = campaigns.filter(c => c.status === 'active');
+
+            // Calculate real stats from campaigns
+            const totalImpressions = campaigns.reduce((sum, c) => sum + (c.stats?.impressions || 0), 0);
+            const totalClicks = campaigns.reduce((sum, c) => sum + (c.stats?.clicks || 0), 0);
+            const totalSpent = campaigns.reduce((sum, c) => sum + (c.stats?.spent || 0), 0);
+            const avgCTR = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : 0;
+
+            // Generate mock revenue (2-3x of spent for profit simulation)
+            const revenue = totalSpent * (2.5 + Math.random() * 0.5);
+
+            return {
+                overview: {
+                    revenue: revenue,
+                    revenueChange: 12.5 + Math.random() * 10,
+                    impressions: totalImpressions,
+                    impressionsChange: 8.3 + Math.random() * 10,
+                    clicks: totalClicks,
+                    clicksChange: 15.2 + Math.random() * 10,
+                    avgCTR: avgCTR,
+                    ctrChange: 5.7 + Math.random() * 5
+                },
+                performance: generatePerformanceTrend(),
+                devices: generateDeviceData(),
+                geo: generateGeoData(),
+                time: generateTimeData()
+            };
+        }
+
+        function generatePerformanceTrend() {
+            const days = 30;
+            const labels = [];
+            const impressions = [];
+            const clicks = [];
+            const revenue = [];
+
+            for (let i = days; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+
+                // Generate trending data
+                const baseImpressions = 1000 + Math.random() * 500;
+                const growth = (days - i) / days; // Growth over time
+                impressions.push(Math.floor(baseImpressions * (1 + growth * 0.5)));
+                clicks.push(Math.floor(impressions[impressions.length - 1] * (0.02 + Math.random() * 0.01)));
+                revenue.push(parseFloat((clicks[clicks.length - 1] * (2 + Math.random() * 1)).toFixed(2)));
+            }
+
+            return { labels, impressions, clicks, revenue };
+        }
+
+        function generateDeviceData() {
+            return {
+                labels: ['Mobile', 'Desktop', 'Tablet'],
+                data: [55 + Math.random() * 10, 30 + Math.random() * 10, 10 + Math.random() * 5]
+            };
+        }
+
+        function generateGeoData() {
+            const countries = [
+                { name: 'United States', code: 'US', flag: '🇺🇸' },
+                { name: 'United Kingdom', code: 'GB', flag: '🇬🇧' },
+                { name: 'Canada', code: 'CA', flag: '🇨🇦' },
+                { name: 'Australia', code: 'AU', flag: '🇦🇺' },
+                { name: 'Germany', code: 'DE', flag: '🇩🇪' }
+            ];
+
+            return countries.map(country => ({
+                ...country,
+                impressions: Math.floor(5000 + Math.random() * 10000),
+                clicks: Math.floor(100 + Math.random() * 500),
+                percentage: 15 + Math.random() * 20
+            })).sort((a, b) => b.impressions - a.impressions);
+        }
+
+        function generateTimeData() {
+            const hours = [];
+            const traffic = [];
+
+            for (let i = 0; i < 24; i++) {
+                hours.push(`${i}:00`);
+                // Simulate peak hours (9-17)
+                const isPeak = i >= 9 && i <= 17;
+                const base = isPeak ? 800 : 300;
+                traffic.push(Math.floor(base + Math.random() * (isPeak ? 400 : 200)));
+            }
+
+            return { hours, traffic };
+        }
+
+        // Load and display analytics
+        async function loadAnalytics() {
+            try {
+                // Ensure campaigns are loaded
+                if (campaigns.length === 0) {
+                    await loadCampaigns();
+                }
+
+                const analyticsData = generateAnalyticsData();
+
+                // Update overview cards
+                updateAnalyticsOverview(analyticsData.overview);
+
+                // Create/update charts
+                createPerformanceChart(analyticsData.performance);
+                createDeviceChart(analyticsData.devices);
+                createTimeChart(analyticsData.time);
+
+                // Update geographic data
+                updateGeoList(analyticsData.geo);
+
+                // Update campaign table
+                updateCampaignAnalyticsTable();
+
+            } catch (error) {
+                console.error('Failed to load analytics:', error);
+                showToast('Error', 'Failed to load analytics data', 'error');
+            }
+        }
+
+        function updateAnalyticsOverview(overview) {
+            document.getElementById('analyticsRevenue').textContent = `$${overview.revenue.toFixed(2)}`;
+            document.getElementById('revenueChange').textContent = `+${overview.revenueChange.toFixed(1)}%`;
+
+            document.getElementById('analyticsImpressions').textContent = overview.impressions.toLocaleString();
+            document.getElementById('impressionsChange').textContent = `+${overview.impressionsChange.toFixed(1)}%`;
+
+            document.getElementById('analyticsClicks').textContent = overview.clicks.toLocaleString();
+            document.getElementById('clicksChange').textContent = `+${overview.clicksChange.toFixed(1)}%`;
+
+            document.getElementById('analyticsAvgCTR').textContent = `${overview.avgCTR}%`;
+            document.getElementById('ctrChange').textContent = `+${overview.ctrChange.toFixed(1)}%`;
+        }
+
+        function createPerformanceChart(data) {
+            const ctx = document.getElementById('performanceChart');
+
+            if (performanceChart) {
+                performanceChart.destroy();
+            }
+
+            performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Impressions',
+                            data: data.impressions,
+                            borderColor: '#2d4ef5',
+                            backgroundColor: 'rgba(45, 78, 245, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: 'Clicks',
+                            data: data.clicks,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            pointHoverRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: { size: 13, weight: '600' }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#171C6B',
+                            bodyColor: '#64748b',
+                            borderColor: 'rgba(23, 28, 107, 0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true,
+                            callbacks: {
+                                label: function (context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(23, 28, 107, 0.05)' },
+                            ticks: {
+                                font: { size: 12 },
+                                color: '#64748b',
+                                callback: function (value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { size: 12 },
+                                color: '#64748b',
+                                maxRotation: 45,
+                                minRotation: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createDeviceChart(data) {
+            const ctx = document.getElementById('deviceChart');
+
+            if (deviceChart) {
+                deviceChart.destroy();
+            }
+
+            deviceChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.data,
+                        backgroundColor: [
+                            '#2d4ef5',
+                            '#10b981',
+                            '#f59e0b'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: { size: 13, weight: '600' }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#171C6B',
+                            bodyColor: '#64748b',
+                            borderColor: 'rgba(23, 28, 107, 0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            callbacks: {
+                                label: function (context) {
+                                    return context.label + ': ' + context.parsed.toFixed(1) + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createTimeChart(data) {
+            const ctx = document.getElementById('timeChart');
+
+            if (timeChart) {
+                timeChart.destroy();
+            }
+
+            timeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.hours,
+                    datasets: [{
+                        label: 'Traffic',
+                        data: data.traffic,
+                        backgroundColor: 'rgba(45, 78, 245, 0.8)',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#171C6B',
+                            bodyColor: '#64748b',
+                            borderColor: 'rgba(23, 28, 107, 0.1)',
+                            borderWidth: 1,
+                            padding: 12,
+                            callbacks: {
+                                label: function (context) {
+                                    return 'Visits: ' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(23, 28, 107, 0.05)' },
+                            ticks: {
+                                font: { size: 12 },
+                                color: '#64748b'
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { size: 11 },
+                                color: '#64748b',
+                                maxRotation: 90,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateGeoList(geoData) {
+            const geoList = document.getElementById('geoList');
+            geoList.innerHTML = '';
+
+            geoData.forEach(country => {
+                const geoItem = document.createElement('div');
+                geoItem.className = 'geo-item';
+                geoItem.innerHTML = `
+            <div class="geo-flag">${country.flag}</div>
+            <div class="geo-details">
+                <div class="geo-country">${country.name}</div>
+                <div class="geo-stats">${country.impressions.toLocaleString()} impressions • ${country.clicks.toLocaleString()} clicks</div>
+            </div>
+            <div class="geo-bar">
+                <div class="geo-bar-fill" style="width: ${country.percentage}%"></div>
+            </div>
+        `;
+                geoList.appendChild(geoItem);
+            });
+        }
+
+        function updateCampaignAnalyticsTable() {
+            const tableBody = document.getElementById('analyticsTableBody');
+            tableBody.innerHTML = '';
+
+            if (campaigns.length === 0) {
+                tableBody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 40px; color: #64748b;">
+                    No campaign data available
+                </td>
+            </tr>
+        `;
+                return;
+            }
+
+            campaigns.forEach(campaign => {
+                const impressions = campaign.stats?.impressions || 0;
+                const clicks = campaign.stats?.clicks || 0;
+                const spent = campaign.stats?.spent || 0;
+                const ctr = impressions > 0 ? ((clicks / impressions) * 100).toFixed(2) : '0.00';
+                const cpm = impressions > 0 ? ((spent / impressions) * 1000).toFixed(2) : '0.00';
+                const cpc = clicks > 0 ? (spent / clicks).toFixed(2) : '0.00';
+
+                const statusClass = `status-${campaign.status}`;
+                const statusText = campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1);
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+            <td>
+                <div class="table-campaign-name">${campaign.campaignName}</div>
+                <div class="table-metric-secondary">${campaign.campaignType.toUpperCase()}</div>
+            </td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td class="table-metric">${impressions.toLocaleString()}</td>
+            <td class="table-metric">${clicks.toLocaleString()}</td>
+            <td class="table-metric">${ctr}%</td>
+            <td class="table-metric">$${spent.toFixed(2)}</td>
+            <td class="table-metric">$${cpm}</td>
+            <td class="table-metric">$${cpc}</td>
+        `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updatePerformanceChart() {
+            const period = document.getElementById('performancePeriod').value;
+            // In a real app, you would fetch data for the selected period
+            // For now, we'll just regenerate with the same data
+            const performanceData = generatePerformanceTrend();
+            createPerformanceChart(performanceData);
+        }
+
+        function exportAnalytics() {
+            // Create CSV content
+            let csvContent = "Campaign,Status,Impressions,Clicks,CTR,Spent,CPM,CPC\n";
+
+            campaigns.forEach(campaign => {
+                const impressions = campaign.stats?.impressions || 0;
+                const clicks = campaign.stats?.clicks || 0;
+                const spent = campaign.stats?.spent || 0;
+                const ctr = impressions > 0 ? ((clicks / impressions) * 100).toFixed(2) : '0.00';
+                const cpm = impressions > 0 ? ((spent / impressions) * 1000).toFixed(2) : '0.00';
+                const cpc = clicks > 0 ? (spent / clicks).toFixed(2) : '0.00';
+
+                csvContent += `"${campaign.campaignName}",${campaign.status},${impressions},${clicks},${ctr}%,$${spent},$${cpm},$${cpc}\n`;
+            });
+
+            // Create download link
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `analytics-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            showToast('Success!', 'Analytics data exported successfully', 'success');
+        }
+        /* ==========================================================================
+   SETTINGS FUNCTIONS
+   ========================================================================== */
+
+        // Switch between settings tabs
+        function switchSettingsTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.settings-nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-settings-tab="${tabName}"]`).classList.add('active');
+
+            // Update panels
+            document.querySelectorAll('.settings-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-settings`).classList.add('active');
+
+            // Load specific data
+            if (tabName === 'profile') {
+                loadProfileData();
+            } else if (tabName === 'security') {
+                loadSecurityData();
+            } else if (tabName === 'billing') {
+                loadBillingData();
+            }
+        }
+
+        // Load Settings Data
+        function loadSettingsData() {
+            if (!currentUser) return;
+
+            // Load profile data
+            loadProfileData();
+            loadSecurityData();
+            loadNotificationSettings();
+            loadBillingData();
+        }
+        function goToProfileSettings() {
+    // Close the dropdown menu
+    document.getElementById('userDropdownMenu').classList.remove('active');
+    
+    // Switch to settings tab and profile section
+    switchTab('settings');
+    switchSettingsTab('profile');
+}
+
+        function loadProfileData() {
+            if (!currentUser) return;
+
+            document.getElementById('profileName').value = currentUser.name || '';
+            document.getElementById('profileEmail').value = currentUser.email || '';
+            document.getElementById('profileCompany').value = currentUser.profile?.company || '';
+            document.getElementById('profilePhone').value = currentUser.profile?.phone || '';
+            document.getElementById('profileCountry').value = currentUser.profile?.country || '';
+
+            // Update profile photo
+            const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+            document.getElementById('profilePhotoText').textContent = initials;
+
+            // Account info
+            document.getElementById('accountType').textContent = currentUser.userType.charAt(0).toUpperCase() + currentUser.userType.slice(1);
+            document.getElementById('memberSince').textContent = new Date(currentUser.createdAt).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('lastLogin').textContent = new Date(currentUser.lastLogin).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Update Profile
+        async function updateProfile(event) {
+            event.preventDefault();
+
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const saveText = document.getElementById('profileSaveText');
+            const saveSpinner = document.getElementById('profileSaveSpinner');
+
+            submitBtn.disabled = true;
+            saveText.style.display = 'none';
+            saveSpinner.style.display = 'inline-block';
+
+            try {
+                const profileData = {
+                    name: document.getElementById('profileName').value,
+                    company: document.getElementById('profileCompany').value,
+                    phone: document.getElementById('profilePhone').value,
+                    country: document.getElementById('profileCountry').value
+                };
+
+                const response = await apiCall('/auth/profile', {
+                    method: 'PUT',
+                    body: JSON.stringify(profileData)
+                });
+
+                if (response.success) {
+                    currentUser = response.user;
+                    localStorage.setItem('userData', JSON.stringify(currentUser));
+                    updateUserInterface();
+                    showToast('Success!', 'Profile updated successfully', 'success');
+                }
+            } catch (error) {
+                showToast('Error', 'Failed to update profile', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                saveText.style.display = 'inline';
+                saveSpinner.style.display = 'none';
+            }
+        }
+
+        function resetProfileForm() {
+            loadProfileData();
+            showToast('Cancelled', 'Changes have been discarded', 'success');
+        }
+
+        function changeProfilePhoto() {
+            showToast('Coming Soon', 'Photo upload feature will be available soon', 'success');
+        }
+
+        // Security Functions
+        function loadSecurityData() {
+            // Load active sessions
+            const sessionsList = document.getElementById('sessionsList');
+            sessionsList.innerHTML = `
+        <div class="session-item">
+            <div class="session-info">
+                <div class="session-device">💻</div>
+                <div class="session-details">
+                    <h4>Chrome on Windows <span class="session-current">Current</span></h4>
+                    <p>Karachi, Pakistan • Last active: Now</p>
+                </div>
+            </div>
+        </div>
+        <div class="session-item">
+            <div class="session-info">
+                <div class="session-device">📱</div>
+                <div class="session-details">
+                    <h4>Safari on iPhone</h4>
+                    <p>Karachi, Pakistan • Last active: 2 hours ago</p>
+                </div>
+            </div>
+            <button class="btn-text danger" onclick="terminateSession('2')">Revoke</button>
+        </div>
+    `;
+        }
+
+        async function changePassword(event) {
+            event.preventDefault();
+
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Validate
+            if (newPassword !== confirmPassword) {
+                showToast('Error', 'New passwords do not match', 'error');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showToast('Error', 'Password must be at least 6 characters', 'error');
+                return;
+            }
+
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const saveText = document.getElementById('passwordSaveText');
+            const saveSpinner = document.getElementById('passwordSaveSpinner');
+
+            submitBtn.disabled = true;
+            saveText.style.display = 'none';
+            saveSpinner.style.display = 'inline-block';
+
+            try {
+                // Simulate API call (you'd implement this in your backend)
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                showToast('Success!', 'Password changed successfully', 'success');
+                resetPasswordForm();
+            } catch (error) {
+                showToast('Error', 'Failed to change password', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                saveText.style.display = 'inline';
+                saveSpinner.style.display = 'none';
+            }
+        }
+
+        function resetPasswordForm() {
+            document.getElementById('passwordForm').reset();
+            document.getElementById('passwordStrengthFill').style.width = '0%';
+            document.getElementById('passwordStrengthText').textContent = 'Enter a password';
+        }
+
+        // Password strength checker
+        document.addEventListener('DOMContentLoaded', function () {
+            const newPasswordInput = document.getElementById('newPassword');
+            if (newPasswordInput) {
+                newPasswordInput.addEventListener('input', function () {
+                    const password = this.value;
+                    const strengthFill = document.getElementById('passwordStrengthFill');
+                    const strengthText = document.getElementById('passwordStrengthText');
+
+                    if (!password) {
+                        strengthFill.style.width = '0%';
+                        strengthText.textContent = 'Enter a password';
+                        return;
+                    }
+
+                    let strength = 0;
+                    let feedback = [];
+
+                    // Length check
+                    if (password.length >= 6) strength += 20;
+                    if (password.length >= 8) strength += 10;
+                    if (password.length >= 12) strength += 10;
+
+                    // Character variety
+                    if (/[a-z]/.test(password)) strength += 15;
+                    if (/[A-Z]/.test(password)) strength += 15;
+                    if (/[0-9]/.test(password)) strength += 15;
+                    if (/[^a-zA-Z0-9]/.test(password)) strength += 15;
+
+                    // Update UI
+                    strengthFill.style.width = strength + '%';
+
+                    if (strength < 40) {
+                        strengthFill.style.background = '#dc2626';
+                        strengthText.textContent = 'Weak password';
+                    } else if (strength < 70) {
+                        strengthFill.style.background = '#f59e0b';
+                        strengthText.textContent = 'Medium strength';
+                    } else {
+                        strengthFill.style.background = '#10b981';
+                        strengthText.textContent = 'Strong password';
+                    }
+                });
+            }
+        });
+
+        function toggle2FA(checkbox) {
+            if (checkbox.checked) {
+                showToast('2FA Enabled', 'Two-factor authentication has been enabled', 'success');
+            } else {
+                showToast('2FA Disabled', 'Two-factor authentication has been disabled', 'success');
+            }
+        }
+
+        function terminateSession(sessionId) {
+            if (confirm('Are you sure you want to revoke this session?')) {
+                showToast('Success!', 'Session terminated successfully', 'success');
+                loadSecurityData();
+            }
+        }
+
+        // Notification Settings
+        function loadNotificationSettings() {
+            // Load from localStorage or use defaults
+            const settings = JSON.parse(localStorage.getItem('notificationSettings') || '{}');
+
+            document.getElementById('notifCampaigns').checked = settings.campaigns !== false;
+            document.getElementById('notifPerformance').checked = settings.performance !== false;
+            document.getElementById('notifBudget').checked = settings.budget !== false;
+            document.getElementById('notifWeekly').checked = settings.weekly || false;
+            document.getElementById('notifMarketing').checked = settings.marketing || false;
+        }
+
+        function saveNotificationSettings() {
+            const settings = {
+                campaigns: document.getElementById('notifCampaigns').checked,
+                performance: document.getElementById('notifPerformance').checked,
+                budget: document.getElementById('notifBudget').checked,
+                weekly: document.getElementById('notifWeekly').checked,
+                marketing: document.getElementById('notifMarketing').checked
+            };
+
+            localStorage.setItem('notificationSettings', JSON.stringify(settings));
+            showToast('Saved!', 'Notification preferences updated', 'success');
+        }
+
+        function togglePushNotifications(checkbox) {
+            if (checkbox.checked) {
+                if ('Notification' in window) {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            showToast('Enabled!', 'Push notifications enabled', 'success');
+                        } else {
+                            checkbox.checked = false;
+                            showToast('Denied', 'Please allow notifications in your browser', 'error');
+                        }
+                    });
+                } else {
+                    checkbox.checked = false;
+                    showToast('Not Supported', 'Your browser does not support notifications', 'error');
+                }
+            } else {
+                showToast('Disabled', 'Push notifications disabled', 'success');
+            }
+        }
+
+        // Billing Functions
+        function loadBillingData() {
+            document.getElementById('settingsBalance').textContent = `$${(currentUser?.balance || 0).toFixed(2)}`;
+            document.getElementById('totalSpentBilling').textContent = `$${userStats.totalSpent || '0.00'}`;
+            document.getElementById('activeCampaignsBilling').textContent = userStats.activeCampaigns || 0;
+        }
+
+        function showAddFundsModal() {
+            const amount = prompt('Enter amount to add (minimum $100):');
+            if (amount && parseFloat(amount) >= 100) {
+                showToast('Processing', 'Redirecting to payment gateway...', 'success');
+                setTimeout(() => {
+                    showToast('Success!', `$${amount} added to your account`, 'success');
+                    // In real app, process payment here
+                }, 2000);
+            } else if (amount) {
+                showToast('Error', 'Minimum deposit amount is $100', 'error');
+            }
+        }
+
+        function addPaymentMethod() {
+            showToast('Coming Soon', 'Payment method management will be available soon', 'success');
+        }
+
+        function removePaymentMethod(id) {
+            if (confirm('Are you sure you want to remove this payment method?')) {
+                showToast('Success!', 'Payment method removed', 'success');
+            }
+        }
+
+        // API Functions
+        function toggleAPIKey(elementId, fullKey) {
+            const element = document.getElementById(elementId);
+            if (element.textContent.includes('•')) {
+                element.textContent = fullKey;
+            } else {
+                element.textContent = '••••••••••••••••••••••••••••';
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Copied!', 'API key copied to clipboard', 'success');
+            }).catch(() => {
+                showToast('Error', 'Failed to copy to clipboard', 'error');
+            });
+        }
+
+        function generateNewAPIKey() {
+            if (confirm('Generate a new API key? This will create a new key for your account.')) {
+                const newKey = 'pk_live_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                showToast('Generated!', 'New API key created successfully', 'success');
+            }
+        }
+
+        function revokeAPIKey(id) {
+            if (confirm('Are you sure you want to revoke this API key? Applications using this key will stop working.')) {
+                showToast('Revoked', 'API key has been revoked', 'success');
+            }
+        }
+
+        function openAPIDoc(docType) {
+            const docs = {
+                quickstart: 'Quick Start Guide - Learn how to integrate our API in minutes',
+                reference: 'API Reference - Complete documentation of all endpoints',
+                examples: 'Code Examples - Sample implementations in various languages',
+                webhooks: 'Webhooks Guide - Set up real-time event notifications'
+            };
+
+            alert(`📚 ${docs[docType]}\n\nThis would open the ${docType} documentation in a new window.`);
+        }
+
+        function addWebhook() {
+            const url = prompt('Enter webhook URL:');
+            if (url) {
+                showToast('Success!', 'Webhook endpoint added', 'success');
+            }
+        }
+        /* ==========================================================================
+   ADD FUNDS FUNCTIONALITY
+   ========================================================================== */
+
+// Initialize Stripe (use your publishable key)
+const stripe = Stripe('pk_test_51234567890abcdefghijklmnopqrstuvwxyz1234567890'); // Replace with your actual Stripe publishable key
+let cardElement = null;
+let selectedAmount = 0;
+let selectedPaymentMethod = 'stripe';
+
+// Show Add Funds Modal
+function showAddFundsModal() {
+    document.getElementById('addFundsModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    // Initialize Stripe Elements if not already initialized
+    if (!cardElement) {
+        initializeStripeElements();
+    }
+    
+    // Reset selections
+    selectedAmount = 0;
+    selectedPaymentMethod = 'stripe';
+    updatePaymentSummary();
+}
+
+// Close Add Funds Modal
+function closeAddFundsModal() {
+    document.getElementById('addFundsModal').classList.remove('active');
+    document.body.style.overflow = '';
+    
+    // Reset form
+    resetAddFundsForm();
+}
+
+// Initialize Stripe Elements
+function initializeStripeElements() {
+    const elements = stripe.elements();
+    
+    // Create card element
+    cardElement = elements.create('card', {
+        style: {
+            base: {
+                fontSize: '16px',
+                color: '#171C6B',
+                fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                fontWeight: '500',
+                '::placeholder': {
+                    color: '#94a3b8',
+                },
+            },
+            invalid: {
+                color: '#dc2626',
+                iconColor: '#dc2626',
+            },
+        },
+    });
+    
+    // Mount card element
+    cardElement.mount('#card-element');
+    
+    // Handle real-time validation errors
+    cardElement.on('change', function(event) {
+        const displayError = document.getElementById('card-errors');
+        if (event.error) {
+            displayError.textContent = event.error.message;
+        } else {
+            displayError.textContent = '';
+        }
+        
+        // Enable/disable submit button based on card validity
+        updateSubmitButton();
+    });
+}
+
+// Select Amount
+function selectAmount(element) {
+    // Remove previous selection
+    document.querySelectorAll('.amount-card').forEach(card => card.classList.remove('selected'));
+    
+    // Select current
+    element.classList.add('selected');
+    
+    const amount = element.dataset.amount;
+    
+    // Show/hide custom input
+    const customInput = document.getElementById('customAmountInput');
+    if (amount === 'custom') {
+        customInput.style.display = 'block';
+        selectedAmount = 0;
+        document.getElementById('customAmountValue').focus();
+    } else {
+        customInput.style.display = 'none';
+        selectedAmount = parseFloat(amount);
+    }
+    
+    updatePaymentSummary();
+    updateSubmitButton();
+}
+
+// Validate Custom Amount
+function validateCustomAmount() {
+    const input = document.getElementById('customAmountValue');
+    const error = document.getElementById('customAmountError');
+    const value = parseFloat(input.value);
+    
+    if (!value || value < 100) {
+        error.textContent = 'Minimum amount is $100';
+        error.style.color = '#dc2626';
+        selectedAmount = 0;
+    } else if (value > 100000) {
+        error.textContent = 'Maximum amount is $100,000';
+        error.style.color = '#dc2626';
+        selectedAmount = 0;
+    } else {
+        error.textContent = `Amount: $${value.toFixed(2)}`;
+        error.style.color = '#059669';
+        selectedAmount = value;
+    }
+    
+    updatePaymentSummary();
+    updateSubmitButton();
+}
+
+// Select Payment Method
+function selectPaymentMethod(element) {
+    // Remove previous selection
+    document.querySelectorAll('.payment-method-card').forEach(card => card.classList.remove('active'));
+    
+    // Select current
+    element.classList.add('active');
+    
+    selectedPaymentMethod = element.dataset.method;
+    
+    // Show/hide payment sections
+    if (selectedPaymentMethod === 'stripe') {
+        document.getElementById('stripeSection').style.display = 'block';
+        document.getElementById('paypalSection').style.display = 'none';
+        document.getElementById('stripeActions').style.display = 'flex';
+    } else if (selectedPaymentMethod === 'paypal') {
+        document.getElementById('stripeSection').style.display = 'none';
+        document.getElementById('paypalSection').style.display = 'block';
+        document.getElementById('stripeActions').style.display = 'none';
+        
+        // Initialize PayPal buttons if amount is selected
+        if (selectedAmount >= 100) {
+            initializePayPalButtons();
+        }
+    }
+    
+    updateSubmitButton();
+}
+
+// Update Payment Summary
+function updatePaymentSummary() {
+    const amount = selectedAmount || 0;
+    const fee = amount * 0.029 + 0.30; // 2.9% + $0.30 (typical Stripe fee)
+    const total = amount + fee;
+    
+    document.getElementById('summaryAmount').textContent = `$${amount.toFixed(2)}`;
+    document.getElementById('summaryFee').textContent = `$${fee.toFixed(2)}`;
+    document.getElementById('summaryTotal').textContent = `$${total.toFixed(2)}`;
+}
+
+// Update Submit Button State
+function updateSubmitButton() {
+    const submitBtn = document.getElementById('submitPaymentBtn');
+    
+    if (selectedAmount >= 100 && selectedPaymentMethod === 'stripe') {
+        submitBtn.disabled = false;
+    } else {
+        submitBtn.disabled = true;
+    }
+}
+
+// Process Stripe Payment
+async function processStripePayment() {
+    if (selectedAmount < 100) {
+        showToast('Error', 'Minimum deposit amount is $100', 'error');
+        return;
+    }
+    
+    const submitBtn = document.getElementById('submitPaymentBtn');
+    const btnText = document.getElementById('paymentBtnText');
+    const btnSpinner = document.getElementById('paymentBtnSpinner');
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    btnText.style.display = 'none';
+    btnSpinner.style.display = 'inline-block';
+    
+    try {
+        // Create payment intent on your server
+        const response = await apiCall('/payments/create-intent', {
+            method: 'POST',
+            body: JSON.stringify({
+                amount: Math.round((selectedAmount + (selectedAmount * 0.029 + 0.30)) * 100), // Convert to cents
+                currency: 'usd',
+                description: 'Account Balance Top-up'
+            })
+        });
+        
+        if (!response.success) {
+            throw new Error(response.message || 'Failed to create payment intent');
+        }
+        
+        // Confirm the payment with Stripe
+        const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
+            response.clientSecret,
+            {
+                payment_method: {
+                    card: cardElement,
+                    billing_details: {
+                        name: currentUser.name,
+                        email: currentUser.email,
+                    },
+                },
+            }
+        );
+        
+        if (stripeError) {
+            throw new Error(stripeError.message);
+        }
+        
+        if (paymentIntent.status === 'succeeded') {
+            // Update balance on server
+            await updateBalanceAfterPayment(selectedAmount, paymentIntent.id, 'stripe');
+            
+            showToast('Success!', `$${selectedAmount.toFixed(2)} added to your account`, 'success');
+            closeAddFundsModal();
+            
+            // Refresh user data
+            await loadUserStats();
+            updateUserInterface();
+            loadBillingData();
+        }
+        
+    } catch (error) {
+        console.error('Payment error:', error);
+        showToast('Payment Failed', error.message || 'Please check your card details and try again', 'error');
+    } finally {
+        submitBtn.disabled = false;
+        btnText.style.display = 'inline';
+        btnSpinner.style.display = 'none';
+    }
+}
+
+// Initialize PayPal Buttons
+function initializePayPalButtons() {
+    // Clear previous buttons
+    const container = document.getElementById('paypal-button-container');
+    container.innerHTML = '';
+    
+    if (!window.paypal) {
+        showToast('Error', 'PayPal SDK not loaded', 'error');
+        return;
+    }
+    
+    paypal.Buttons({
+        // Set up the transaction
+        createOrder: function(data, actions) {
+            const amount = selectedAmount || 0;
+            const fee = amount * 0.029 + 0.30;
+            const total = amount + fee;
+            
+            if (amount < 100) {
+                showToast('Error', 'Minimum deposit amount is $100', 'error');
+                return;
+            }
+            
+            return actions.order.create({
+                purchase_units: [{
+                    description: 'TrafficStars Account Balance Top-up',
+                    amount: {
+                        currency_code: 'USD',
+                        value: total.toFixed(2)
+                    }
+                }]
+            });
+        },
+        
+        // Finalize the transaction
+        onApprove: async function(data, actions) {
+            try {
+                const order = await actions.order.capture();
+                
+                // Update balance on server
+                await updateBalanceAfterPayment(selectedAmount, order.id, 'paypal');
+                
+                showToast('Success!', `$${selectedAmount.toFixed(2)} added to your account`, 'success');
+                closeAddFundsModal();
+                
+                // Refresh user data
+                await loadUserStats();
+                updateUserInterface();
+                loadBillingData();
+                
+            } catch (error) {
+                console.error('PayPal capture error:', error);
+                showToast('Payment Failed', 'Failed to process PayPal payment', 'error');
+            }
+        },
+        
+        onError: function(err) {
+            console.error('PayPal error:', err);
+            showToast('Payment Failed', 'PayPal payment was not completed', 'error');
+        },
+        
+        onCancel: function(data) {
+            showToast('Cancelled', 'PayPal payment was cancelled', 'success');
+        },
+        
+        style: {
+            layout: 'vertical',
+            color: 'blue',
+            shape: 'rect',
+            label: 'pay',
+            height: 45
+        }
+    }).render('#paypal-button-container');
+}
+
+// Update Balance After Payment
+async function updateBalanceAfterPayment(amount, transactionId, method) {
+    try {
+        const response = await apiCall('/payments/confirm', {
+            method: 'POST',
+            body: JSON.stringify({
+                amount: amount,
+                transactionId: transactionId,
+                paymentMethod: method
+            })
+        });
+        
+        if (response.success) {
+            // Update local user data
+            currentUser.balance = response.newBalance;
+            localStorage.setItem('userData', JSON.stringify(currentUser));
+            
+            return response;
+        } else {
+            throw new Error(response.message || 'Failed to update balance');
+        }
+    } catch (error) {
+        console.error('Balance update error:', error);
+        // Don't throw - payment succeeded but balance update failed
+        // Show warning instead
+        showToast('Warning', 'Payment successful but balance update delayed. Please refresh.', 'error');
+    }
+}
+
+// Reset Add Funds Form
+function resetAddFundsForm() {
+    // Clear card element
+    if (cardElement) {
+        cardElement.clear();
+    }
+    
+    // Reset selections
+    document.querySelectorAll('.amount-card').forEach(card => card.classList.remove('selected'));
+    document.querySelectorAll('.payment-method-card').forEach(card => card.classList.remove('active'));
+    document.querySelector('[data-method="stripe"]').classList.add('active');
+    
+    // Hide custom input
+    document.getElementById('customAmountInput').style.display = 'none';
+    document.getElementById('customAmountValue').value = '';
+    document.getElementById('customAmountError').textContent = '';
+    
+    // Reset amounts
+    selectedAmount = 0;
+    selectedPaymentMethod = 'stripe';
+    updatePaymentSummary();
+    
+    // Show stripe section
+    document.getElementById('stripeSection').style.display = 'block';
+    document.getElementById('paypalSection').style.display = 'none';
+    document.getElementById('stripeActions').style.display = 'flex';
+    
+    // Clear errors
+    document.getElementById('card-errors').textContent = '';
+    
+    // Disable submit button
+    document.getElementById('submitPaymentBtn').disabled = true;
+}
+
+// Close modal on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const addFundsModal = document.getElementById('addFundsModal');
+        if (addFundsModal && addFundsModal.classList.contains('active')) {
+            closeAddFundsModal();
+        }
+    }
+});
+
+// Close modal on overlay click
+document.getElementById('addFundsModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAddFundsModal();
+    }
+});
     </script>
 </body>
+
 </html>

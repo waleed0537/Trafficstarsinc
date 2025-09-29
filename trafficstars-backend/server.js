@@ -672,6 +672,123 @@ app.use((error, req, res, next) => {
     message: 'Internal server error'
   });
 });
+// Payment Routes
+
+// Create Payment Intent (Stripe)
+app.post('/api/payments/create-intent', authenticateToken, async (req, res) => {
+  try {
+    const { amount, currency, description } = req.body;
+    
+    // Validate amount
+    if (!amount || amount < 10000) { // $100 minimum in cents
+      return res.status(400).json({
+        success: false,
+        message: 'Minimum amount is $100'
+      });
+    }
+    
+    if (amount > 10000000) { // $100,000 maximum
+      return res.status(400).json({
+        success: false,
+        message: 'Maximum amount is $100,000'
+      });
+    }
+    
+    // In production, you would create a Stripe payment intent here
+    // For now, we'll simulate it
+    const clientSecret = 'pi_' + Math.random().toString(36).substring(2, 15) + '_secret_' + Math.random().toString(36).substring(2, 15);
+    
+    console.log(`💳 Payment intent created for ${req.user.email}: $${(amount / 100).toFixed(2)}`);
+    
+    res.json({
+      success: true,
+      clientSecret: clientSecret,
+      amount: amount
+    });
+    
+  } catch (error) {
+    console.error('❌ Payment intent error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create payment intent'
+    });
+  }
+});
+
+// Confirm Payment and Update Balance
+app.post('/api/payments/confirm', authenticateToken, async (req, res) => {
+  try {
+    const { amount, transactionId, paymentMethod } = req.body;
+    
+    // Validate
+    if (!amount || amount < 100) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid amount'
+      });
+    }
+    
+    if (!transactionId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Transaction ID required'
+      });
+    }
+    
+    // Update user balance
+    const user = await User.findById(req.user._id);
+    user.balance = (user.balance || 0) + amount;
+    await user.save();
+    
+    console.log(`✅ Payment confirmed for ${user.email}: $${amount} via ${paymentMethod}`);
+    console.log(`💰 New balance: $${user.balance.toFixed(2)}`);
+    
+    res.json({
+      success: true,
+      message: 'Payment confirmed successfully',
+      newBalance: user.balance,
+      transactionId: transactionId
+    });
+    
+  } catch (error) {
+    console.error('❌ Payment confirmation error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to confirm payment'
+    });
+  }
+});
+
+// Get Payment History
+app.get('/api/payments/history', authenticateToken, async (req, res) => {
+  try {
+    // In production, you would fetch from a payments/transactions collection
+    // For now, return mock data
+    const mockTransactions = [
+      {
+        id: 'txn_' + Date.now(),
+        type: 'deposit',
+        amount: 500,
+        method: 'stripe',
+        status: 'completed',
+        date: new Date(),
+        description: 'Account Deposit'
+      }
+    ];
+    
+    res.json({
+      success: true,
+      transactions: mockTransactions
+    });
+    
+  } catch (error) {
+    console.error('❌ Payment history error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch payment history'
+    });
+  }
+});
 
 // Start server
 app.listen(PORT, () => {
