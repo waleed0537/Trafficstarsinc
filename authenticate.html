@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - TrafficStars</title>
-    
+
     <!-- Inter Font - matching your website -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <style>
         /* Reset and base styles matching your website */
         * {
@@ -288,6 +289,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -334,7 +336,7 @@
             background: #f8f9ff;
         }
 
-        .radio-input:checked + .radio-label {
+        .radio-input:checked+.radio-label {
             border-color: #171C6B;
             background: #f8f9ff;
             box-shadow: 0 0 0 3px rgba(23, 28, 107, 0.1);
@@ -352,7 +354,7 @@
             flex-shrink: 0;
         }
 
-        .radio-input:checked + .radio-label .radio-icon {
+        .radio-input:checked+.radio-label .radio-icon {
             background: #171C6B;
             color: white;
         }
@@ -389,8 +391,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         /* Responsive design */
@@ -399,13 +406,14 @@
                 padding: 32px 24px;
                 margin: 0 16px;
             }
-            
+
             .brand-title {
                 font-size: 24px;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="auth-container">
         <div class="brand-section">
@@ -423,19 +431,22 @@
         <form class="form-section active" id="loginForm">
             <div class="form-group">
                 <label class="form-label" for="loginEmail">Email Address</label>
-                <input type="email" class="form-input" id="loginEmail" name="email" placeholder="Enter your email" required>
+                <input type="email" class="form-input" id="loginEmail" name="email" placeholder="Enter your email"
+                    required>
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="loginPassword">Password</label>
-                <input type="password" class="form-input" id="loginPassword" name="password" placeholder="Enter your password" required>
+                <input type="password" class="form-input" id="loginPassword" name="password"
+                    placeholder="Enter your password" required>
             </div>
 
             <div class="form-group">
                 <label class="form-label">Login as</label>
                 <div class="user-type-selector">
                     <div class="radio-option">
-                        <input type="radio" id="advertiser" name="userType" value="advertiser" class="radio-input" checked>
+                        <input type="radio" id="advertiser" name="userType" value="advertiser" class="radio-input"
+                            checked>
                         <label for="advertiser" class="radio-label">
                             <span class="radio-icon">📈</span>
                             <div class="radio-content">
@@ -463,37 +474,43 @@
             </div>
 
             <button type="submit" class="submit-button">Sign In</button>
-            
-            <a href="#" class="forgot-link">Forgot your password?</a>
+
+            <a href="/forgot-password" class="forgot-link">Forgot your password?</a>
+
         </form>
 
         <!-- Signup Form -->
         <form class="form-section" id="signupForm">
             <div class="form-group">
                 <label class="form-label" for="signupName">Full Name</label>
-                <input type="text" class="form-input" id="signupName" name="name" placeholder="Enter your full name" required>
+                <input type="text" class="form-input" id="signupName" name="name" placeholder="Enter your full name"
+                    required>
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="signupEmail">Email Address</label>
-                <input type="email" class="form-input" id="signupEmail" name="email" placeholder="Enter your email" required>
+                <input type="email" class="form-input" id="signupEmail" name="email" placeholder="Enter your email"
+                    required>
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="signupPassword">Password</label>
-                <input type="password" class="form-input" id="signupPassword" name="password" placeholder="Create a strong password" required minlength="6">
+                <input type="password" class="form-input" id="signupPassword" name="password"
+                    placeholder="Create a strong password" required minlength="6">
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="confirmPassword">Confirm Password</label>
-                <input type="password" class="form-input" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+                <input type="password" class="form-input" id="confirmPassword" name="confirmPassword"
+                    placeholder="Confirm your password" required>
             </div>
 
             <div class="form-group">
                 <label class="form-label">Account Type</label>
                 <div class="user-type-selector">
                     <div class="radio-option">
-                        <input type="radio" id="signupAdvertiser" name="signupUserType" value="advertiser" class="radio-input" checked>
+                        <input type="radio" id="signupAdvertiser" name="signupUserType" value="advertiser"
+                            class="radio-input" checked>
                         <label for="signupAdvertiser" class="radio-label">
                             <span class="radio-icon">📈</span>
                             <div class="radio-content">
@@ -503,7 +520,8 @@
                         </label>
                     </div>
                     <div class="radio-option">
-                        <input type="radio" id="signupPublisher" name="signupUserType" value="publisher" class="radio-input">
+                        <input type="radio" id="signupPublisher" name="signupUserType" value="publisher"
+                            class="radio-input">
                         <label for="signupPublisher" class="radio-label">
                             <span class="radio-icon">💰</span>
                             <div class="radio-content">
@@ -548,84 +566,108 @@
         }
 
         // Login Form Handler
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const email = formData.get('email');
-            const password = formData.get('password');
-            const userType = formData.get('userType');
-            const remember = formData.get('remember') === 'on';
-            
-            const submitButton = this.querySelector('.submit-button');
-            const originalText = submitButton.textContent;
-            
-            // Disable button and show loading state
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<span class="loading-spinner"></span>Signing In...';
-            
-            try {
-                const response = await fetch(`${API_BASE}/auth/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        email,
-                        password,
-                        userType,
-                        remember
-                    })
-                });
+        // REPLACE THE LOGIN FORM HANDLER in authenticate.html (around line 350)
+// Find the line: document.getElementById('loginForm').addEventListener('submit', async function(e) {
+// And replace the entire handler with this:
 
-                const data = await response.json();
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const email = formData.get('email');
+    const password = formData.get('password');
+    const userType = formData.get('userType');
+    const remember = formData.get('remember') === 'on';
+    
+    const submitButton = this.querySelector('.submit-button');
+    const originalText = submitButton.textContent;
+    
+    // Disable button and show loading state
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<span class="loading-spinner"></span>Signing In...';
+    
+    try {
+        const response = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email,
+                password,
+                userType,
+                remember
+            })
+        });
 
-                if (data.success) {
-                    // Store auth token
-                    localStorage.setItem('authToken', data.token);
-                    localStorage.setItem('userData', JSON.stringify(data.user));
-                    
-                    // Success state
-                    submitButton.innerHTML = '✅ Success!';
-                    submitButton.style.background = '#10b981';
-                    
-                    // Show success message
-                    const userTypeName = userType.charAt(0).toUpperCase() + userType.slice(1);
-                    showMessage(`Welcome back, ${data.user.name}! Logging in as ${userTypeName}...`, 'success');
-                    
-                    // Redirect based on user type after 2 seconds
-                    setTimeout(() => {
-                        showMessage('Redirecting to dashboard...', 'info');
-                        
-                        setTimeout(() => {
-                            if (userType === 'advertiser') {
-                                window.location.href = '/advertiser_admin.html';
-                            } else if (userType === 'publisher') {
-                                window.location.href = '/publisher_admin.html';
-                            }
-                        }, 1000);
-                    }, 1500);
-                    
-                } else {
-                    // Error state
-                    submitButton.disabled = false;
-                    submitButton.textContent = originalText;
-                    submitButton.style.background = '#171C6B';
-                    showMessage(data.message || 'Login failed. Please try again.', 'error');
-                }
-            } catch (error) {
-                console.error('Login error:', error);
+        const data = await response.json();
+
+        if (data.success) {
+            // Store auth token
+            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('userData', JSON.stringify(data.user));
+            
+            // Success state
+            submitButton.innerHTML = '✅ Success!';
+            submitButton.style.background = '#10b981';
+            
+            // CHECK IF ADMIN
+            if (data.isAdmin) {
+                showMessage('Welcome Administrator! Redirecting to admin panel...', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = '/admin_panel.html';
+                }, 1500);
+                return;
+            }
+            
+            // REGULAR USER LOGIN
+            const userTypeName = userType.charAt(0).toUpperCase() + userType.slice(1);
+            showMessage(`Welcome back, ${data.user.name}! Logging in as ${userTypeName}...`, 'success');
+            
+            // Redirect based on user type after 2 seconds
+            setTimeout(() => {
+                showMessage('Redirecting to dashboard...', 'info');
+                
+                setTimeout(() => {
+                    if (userType === 'advertiser') {
+                        window.location.href = '/advertiser_admin.html';
+                    } else if (userType === 'publisher') {
+                        window.location.href = '/publisher_admin.html';
+                    }
+                }, 1000);
+            }, 1500);
+            
+        } else {
+            // Check if verification is required
+            if (data.requiresVerification) {
                 submitButton.disabled = false;
                 submitButton.textContent = originalText;
                 submitButton.style.background = '#171C6B';
-                showMessage('Network error. Please check your connection and try again.', 'error');
+                
+                // Show verification required message with option to resend
+                showVerificationRequired(data.email);
+            } else {
+                // Error state
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+                submitButton.style.background = '#171C6B';
+                showMessage(data.message || 'Login failed. Please try again.', 'error');
             }
-        });
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+        submitButton.style.background = '#171C6B';
+        showMessage('Network error. Please check your connection and try again.', 'error');
+    }
+});
 
         // Signup Form Handler
-        document.getElementById('signupForm').addEventListener('submit', async function(e) {
+        document.getElementById('signupForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-            
+
             const formData = new FormData(this);
             const name = formData.get('name');
             const email = formData.get('email');
@@ -633,10 +675,10 @@
             const confirmPassword = formData.get('confirmPassword');
             const userType = formData.get('signupUserType');
             const terms = formData.get('terms') === 'on';
-            
+
             const submitButton = this.querySelector('.submit-button');
             const originalText = submitButton.textContent;
-            
+
             // Client-side validation
             if (password !== confirmPassword) {
                 showMessage('Passwords do not match', 'error');
@@ -652,11 +694,11 @@
                 showMessage('You must accept the terms and conditions', 'error');
                 return;
             }
-            
+
             // Disable button and show loading state
             submitButton.disabled = true;
             submitButton.innerHTML = '<span class="loading-spinner"></span>Creating Account...';
-            
+
             try {
                 const response = await fetch(`${API_BASE}/auth/register`, {
                     method: 'POST',
@@ -679,26 +721,29 @@
                     // Success state
                     submitButton.innerHTML = '✅ Account Created!';
                     submitButton.style.background = '#10b981';
-                    
-                    const userTypeName = userType.charAt(0).toUpperCase() + userType.slice(1);
-                    showMessage(`${userTypeName} account created successfully! You can now sign in.`, 'success');
-                    
-                    // Switch to login tab after successful signup
+
+                    // Show success message with verification instructions
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message message-success';
+                    messageDiv.innerHTML = `
+                <strong>🎉 Account created successfully!</strong><br>
+                We've sent a verification email to <strong>${email}</strong>.<br>
+                Please check your inbox and click the verification link to activate your account.
+            `;
+
+                    const activeForm = document.querySelector('.form-section.active');
+                    activeForm.insertBefore(messageDiv, activeForm.firstChild);
+
+                    // Clear the form
+                    this.reset();
+
+                    // Reset button after 3 seconds
                     setTimeout(() => {
-                        document.querySelector('.tab-button').click();
-                        // Pre-fill login form with the registered email and user type
-                        document.getElementById('loginEmail').value = email;
-                        
-                        // Set the matching user type radio button
-                        if (userType === 'advertiser') {
-                            document.getElementById('advertiser').checked = true;
-                        } else {
-                            document.getElementById('publisher').checked = true;
-                        }
-                        
-                        showMessage('Please sign in with your new account', 'info');
-                    }, 2000);
-                    
+                        submitButton.disabled = false;
+                        submitButton.textContent = originalText;
+                        submitButton.style.background = '#171C6B';
+                    }, 3000);
+
                 } else {
                     // Error state
                     submitButton.disabled = false;
@@ -714,6 +759,56 @@
                 showMessage('Network error. Please check your connection and try again.', 'error');
             }
         });
+        function showVerificationRequired(email) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message message-error';
+            messageDiv.innerHTML = `
+        <strong>⚠️ Email Verification Required</strong><br>
+        Please verify your email address before logging in.<br>
+        <button onclick="resendVerificationEmail('${email}')" style="
+            margin-top: 12px;
+            padding: 8px 16px;
+            background: #171C6B;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        ">Resend Verification Email</button>
+    `;
+
+            const activeForm = document.querySelector('.form-section.active');
+            const existingMessage = activeForm.querySelector('.message');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+            activeForm.insertBefore(messageDiv, activeForm.firstChild);
+        }
+
+        // Function to resend verification email
+        async function resendVerificationEmail(email) {
+            try {
+                const response = await fetch(`${API_BASE}/auth/resend-verification`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('✅ Verification email sent! Please check your inbox.', 'success');
+                } else {
+                    showMessage(data.message || 'Failed to send verification email', 'error');
+                }
+            } catch (error) {
+                console.error('Resend error:', error);
+                showMessage('Network error. Please try again.', 'error');
+            }
+        }
 
         // Message system
         function showMessage(text, type) {
@@ -722,33 +817,43 @@
             if (existingMessage) {
                 existingMessage.remove();
             }
-            
+
             const message = document.createElement('div');
             message.className = `message message-${type}`;
-            message.textContent = text;
-            
+            message.innerHTML = text;
+
             // Insert message at the top of the form
             const activeForm = document.querySelector('.form-section.active');
             activeForm.insertBefore(message, activeForm.firstChild);
-            
-            // Auto remove after 5 seconds
+
+            // Auto remove after 7 seconds
             setTimeout(() => {
                 if (message.parentNode) {
                     message.remove();
                 }
-            }, 5000);
+            }, 7000);
         }
 
         // Check if user is already logged in
-        window.addEventListener('load', function() {
+        window.addEventListener('load', function () {
+            // Check for verification success message in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const verified = urlParams.get('verified');
+
+            if (verified === 'true') {
+                showMessage('✅ Email verified successfully! You can now sign in.', 'success');
+                // Clean up URL
+                window.history.replaceState({}, document.title, '/');
+            }
+
             const authToken = localStorage.getItem('authToken');
             const userData = localStorage.getItem('userData');
-            
+
             if (authToken && userData) {
                 try {
                     const user = JSON.parse(userData);
                     showMessage(`You're already logged in as ${user.name}. Redirecting...`, 'info');
-                    
+
                     setTimeout(() => {
                         if (user.userType === 'advertiser') {
                             window.location.href = '/advertiser_admin.html';
@@ -765,10 +870,10 @@
         });
 
         // Password strength indicator
-        document.getElementById('signupPassword').addEventListener('input', function() {
+        document.getElementById('signupPassword').addEventListener('input', function () {
             const password = this.value;
             const strength = calculatePasswordStrength(password);
-            
+
             // You can add visual feedback here if needed
         });
 
@@ -784,10 +889,10 @@
         }
 
         // Form validation feedback
-        document.getElementById('confirmPassword').addEventListener('input', function() {
+        document.getElementById('confirmPassword').addEventListener('input', function () {
             const password = document.getElementById('signupPassword').value;
             const confirmPassword = this.value;
-            
+
             if (confirmPassword && password !== confirmPassword) {
                 this.style.borderColor = '#ef4444';
             } else {
@@ -796,4 +901,5 @@
         });
     </script>
 </body>
+
 </html>

@@ -4,6 +4,9 @@ const cors = require('cors');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,17 +23,33 @@ app.use(express.static(path.join(__dirname, '..')));
 
 // MongoDB Connection
 const MONGODB_URI = 'mongodb+srv://adshark00:0KKX2YSBGY9Zrz21@cluster0.g7lpz.mongodb.net/trafficstarsltd?retryWrites=true&w=majority&appName=Cluster0';
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'adshark00@gmail.com',
+    pass: 'iasy nmqs bzpa favn',
+  },
+});
 
+transporter.verify(function (error, success) {
+  if (error) {
+    console.log('❌ Email service error:', error);
+  } else {
+    console.log('✅ Email service ready to send messages');
+  }
+});
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => {
-  console.log('✅ Connected to MongoDB successfully');
-})
-.catch(err => {
-  console.error('❌ MongoDB connection error:', err);
-});
+  .then(() => {
+    createAdminUser();
+    console.log('✅ Connected to MongoDB successfully');
+    
+  })
+  .catch(err => {
+    console.error('❌ MongoDB connection error:', err);
+  });
 const placementSchema = new mongoose.Schema({
   placementName: {
     type: String,
@@ -94,6 +113,12 @@ const placementSchema = new mongoose.Schema({
 
 const Placement = mongoose.model('Placement', placementSchema);
 // User Schema
+// =============================================================================
+// UPDATE USER SCHEMA - Add Password Reset Fields
+// =============================================================================
+
+// In your server.js, update the userSchema to include these fields:
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -121,6 +146,28 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  
+  // EMAIL VERIFICATION FIELDS
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+  verificationToken: {
+    type: String
+  },
+  verificationTokenExpires: {
+    type: Date
+  },
+  isAdmin: { type: Boolean, default: false },
+  // PASSWORD RESET FIELDS - ADD THESE TWO FIELDS
+  passwordResetToken: {
+    type: String
+  },
+  passwordResetExpires: {
+    type: Date
+  },
+  // END OF PASSWORD RESET FIELDS
+  
   balance: {
     type: Number,
     default: 0
@@ -129,7 +176,20 @@ const userSchema = new mongoose.Schema({
     company: String,
     phone: String,
     country: String,
-    avatar: String
+    avatar: String,
+    address: String,
+    city: String,
+    zipCode: String,
+    taxId: String,
+    paymentMethod: String,
+    paymentDetails: Object,
+    emailNotifications: Boolean,
+    paymentAlerts: Boolean,
+    performanceReports: Boolean,
+    weeklyDigest: Boolean,
+    twoFactorEnabled: Boolean,
+    lastPasswordChange: Date,
+    minimumPayout: Number
   },
   lastLogin: {
     type: Date,
@@ -139,7 +199,7 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Hash password before saving
+// Password hashing and other methods remain the same...
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   
@@ -152,12 +212,10 @@ userSchema.pre('save', async function(next) {
   }
 });
 
-// Compare password method
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Generate JWT token
 userSchema.methods.generateAuthToken = function() {
   return jwt.sign(
     { 
@@ -233,11 +291,19 @@ const campaignSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  landingUrl: {
+  landingUrls: [{
     type: String,
     required: true,
-    trim: true
-  },
+    trim: true,
+    validate: {
+      validator: function (url) {
+        // Validate URL format
+        const urlPattern = /^https?:\/\/.+/;
+        return urlPattern.test(url);
+      },
+      message: 'Invalid URL format'
+    }
+  }],
   campaignType: {
     type: String,
     required: true,
@@ -249,8 +315,11 @@ const campaignSchema = new mongoose.Schema({
   },
   trafficPackage: {
     amount: String,
-    price: String,
-    customAmount: String
+    impressions: Number,
+    cpm: Number,
+    pricePerURL: Number,
+    totalPrice: Number,
+    urlCount: Number
   },
   targeting: {
     targetCountries: String,
@@ -278,7 +347,62 @@ const campaignSchema = new mongoose.Schema({
 });
 
 const Campaign = mongoose.model('Campaign', campaignSchema);
+const authenticateAdmin = async (req, res, next) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
 
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Access token required'
+      });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.id).select('-password');
+
+    if (!user || !user.isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Admin access required'
+      });
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    return res.status(403).json({
+      success: false,
+      message: 'Invalid or expired token'
+    });
+  }
+};
+
+// Create Admin User on Server Start (add to server startup)
+async function createAdminUser() {
+  try {
+    const adminEmail = 'admin@mail.com';
+    const adminExists = await User.findOne({ email: adminEmail });
+
+    if (!adminExists) {
+      const adminUser = new User({
+        name: 'System Administrator',
+        email: adminEmail,
+        password: 'Admin789',
+        userType: 'advertiser',
+        isAdmin: true,
+        isVerified: true,
+        isActive: true
+      });
+
+      await adminUser.save();
+      console.log('✅ Admin user created successfully');
+    }
+  } catch (error) {
+    console.error('❌ Admin user creation error:', error.message);
+  }
+}
 // Middleware to verify JWT token
 const authenticateToken = async (req, res, next) => {
   try {
@@ -294,7 +418,7 @@ const authenticateToken = async (req, res, next) => {
 
     const decoded = jwt.verify(token, JWT_SECRET);
     const user = await User.findById(decoded.id).select('-password');
-    
+
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -322,7 +446,832 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+function getVerificationEmailHTML(userName, verificationLink) {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          line-height: 1.6;
+          color: #333;
+          margin: 0;
+          padding: 0;
+          background-color: #f8f9ff;
+        }
+        .container {
+          max-width: 600px;
+          margin: 40px auto;
+          background: white;
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 4px 24px rgba(23, 28, 107, 0.08);
+        }
+        .header {
+          background: linear-gradient(135deg, #171C6B 0%, #2d4ef5 100%);
+          padding: 40px 30px;
+          text-align: center;
+        }
+        .logo {
+          width: 60px;
+          height: 60px;
+          background: white;
+          border-radius: 12px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 30px;
+          font-weight: 600;
+          color: #171C6B;
+          margin-bottom: 20px;
+        }
+        .header h1 {
+          color: white;
+          margin: 0;
+          font-size: 28px;
+          font-weight: 600;
+        }
+        .content {
+          padding: 40px 30px;
+        }
+        .content h2 {
+          color: #171C6B;
+          font-size: 24px;
+          margin-top: 0;
+          margin-bottom: 20px;
+        }
+        .content p {
+          color: #666;
+          font-size: 16px;
+          margin-bottom: 20px;
+        }
+        .button {
+          display: inline-block;
+          padding: 16px 32px;
+          background: #171C6B;
+          color: white !important;
+          text-decoration: none;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 16px;
+          margin: 20px 0;
+          transition: all 0.2s ease;
+        }
+        .button:hover {
+          background: #151a5c;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(23, 28, 107, 0.3);
+        }
+        .alt-link {
+          background: #f8f9ff;
+          padding: 20px;
+          border-radius: 8px;
+          margin: 20px 0;
+          word-break: break-all;
+        }
+        .alt-link p {
+          margin: 0 0 10px 0;
+          font-size: 14px;
+          color: #666;
+        }
+        .alt-link a {
+          color: #171C6B;
+          font-size: 14px;
+        }
+        .footer {
+          padding: 30px;
+          background: #f8f9ff;
+          text-align: center;
+          border-top: 1px solid #e0e0e0;
+        }
+        .footer p {
+          color: #999;
+          font-size: 14px;
+          margin: 5px 0;
+        }
+        .warning {
+          background: #fef2f2;
+          border-left: 4px solid #ef4444;
+          padding: 15px;
+          margin: 20px 0;
+          border-radius: 4px;
+        }
+        .warning p {
+          color: #991b1b;
+          margin: 0;
+          font-size: 14px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="logo">T</div>
+          <h1>TrafficStars</h1>
+        </div>
+        
+        <div class="content">
+          <h2>Welcome to TrafficStars, ${userName}! 👋</h2>
+          
+          <p>Thank you for signing up! We're excited to have you on board.</p>
+          
+          <p>To complete your registration and start using TrafficStars, please verify your email address by clicking the button below:</p>
+          
+          <center>
+            <a href="${verificationLink}" class="button">Verify Email Address</a>
+          </center>
+          
+          <div class="alt-link">
+            <p>If the button doesn't work, copy and paste this link into your browser:</p>
+            <a href="${verificationLink}">${verificationLink}</a>
+          </div>
+          
+          <div class="warning">
+            <p><strong>⚠️ Important:</strong> This verification link will expire in 24 hours. If you didn't create an account with TrafficStars, please ignore this email.</p>
+          </div>
+          
+          <p>Need help? Contact our support team at support@trafficstars.com</p>
+        </div>
+        
+        <div class="footer">
+          <p><strong>TrafficStars Ltd.</strong></p>
+          <p>Premium Traffic Solutions for Digital Advertising</p>
+          <p style="margin-top: 15px;">© ${new Date().getFullYear()} TrafficStars. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
 
+function getWelcomeEmailHTML(userName, userType) {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          line-height: 1.6;
+          color: #333;
+          margin: 0;
+          padding: 0;
+          background-color: #f8f9ff;
+        }
+        .container {
+          max-width: 600px;
+          margin: 40px auto;
+          background: white;
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 4px 24px rgba(23, 28, 107, 0.08);
+        }
+        .header {
+          background: linear-gradient(135deg, #171C6B 0%, #2d4ef5 100%);
+          padding: 40px 30px;
+          text-align: center;
+        }
+        .logo {
+          width: 60px;
+          height: 60px;
+          background: white;
+          border-radius: 12px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 30px;
+          font-weight: 600;
+          color: #171C6B;
+          margin-bottom: 20px;
+        }
+        .header h1 {
+          color: white;
+          margin: 0;
+          font-size: 28px;
+          font-weight: 600;
+        }
+        .content {
+          padding: 40px 30px;
+        }
+        .success-icon {
+          font-size: 64px;
+          text-align: center;
+          margin: 20px 0;
+        }
+        .content h2 {
+          color: #171C6B;
+          font-size: 24px;
+          text-align: center;
+          margin-bottom: 20px;
+        }
+        .content p {
+          color: #666;
+          font-size: 16px;
+          margin-bottom: 20px;
+        }
+        .button {
+          display: inline-block;
+          padding: 16px 32px;
+          background: #171C6B;
+          color: white !important;
+          text-decoration: none;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 16px;
+          margin: 20px 0;
+        }
+        .features {
+          background: #f8f9ff;
+          padding: 25px;
+          border-radius: 8px;
+          margin: 25px 0;
+        }
+        .features h3 {
+          color: #171C6B;
+          font-size: 18px;
+          margin-top: 0;
+        }
+        .features ul {
+          margin: 15px 0;
+          padding-left: 20px;
+        }
+        .features li {
+          color: #666;
+          margin: 10px 0;
+        }
+        .footer {
+          padding: 30px;
+          background: #f8f9ff;
+          text-align: center;
+          border-top: 1px solid #e0e0e0;
+        }
+        .footer p {
+          color: #999;
+          font-size: 14px;
+          margin: 5px 0;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="logo">T</div>
+          <h1>TrafficStars</h1>
+        </div>
+        
+        <div class="content">
+          <div class="success-icon">🎉</div>
+          <h2>Email Verified Successfully!</h2>
+          
+          <p>Congratulations, ${userName}! Your email has been verified and your ${userType} account is now active.</p>
+          
+          <center>
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5000'}" class="button">Go to Dashboard</a>
+          </center>
+          
+          <div class="features">
+            <h3>What's Next?</h3>
+            <ul>
+              ${userType === 'advertiser' ? `
+                <li>📊 Create your first advertising campaign</li>
+                <li>🎯 Set up targeting and budget</li>
+                <li>📈 Track your campaign performance</li>
+                <li>💳 Add funds to your account</li>
+              ` : `
+                <li>🌐 Add your websites</li>
+                <li>📍 Create ad placements</li>
+                <li>💰 Start earning from your traffic</li>
+                <li>📊 Monitor your earnings in real-time</li>
+              `}
+            </ul>
+          </div>
+          
+          <p>If you have any questions or need assistance, our support team is here to help at support@trafficstars.com</p>
+        </div>
+        
+        <div class="footer">
+          <p><strong>TrafficStars Ltd.</strong></p>
+          <p>Premium Traffic Solutions for Digital Advertising</p>
+          <p style="margin-top: 15px;">© ${new Date().getFullYear()} TrafficStars. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+// Function to send verification email
+async function sendVerificationEmail(email, userName, verificationToken) {
+  const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/verify-email?token=${verificationToken}`;
+
+  const mailOptions = {
+    from: '"TrafficStars" <adshark00@gmail.com>',
+    to: email,
+    subject: 'Verify Your TrafficStars Account',
+    html: getVerificationEmailHTML(userName, verificationLink)
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Verification email sent to ${email}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Email sending failed:', error);
+    return false;
+  }
+}
+
+// Function to send welcome email after verification
+async function sendWelcomeEmail(email, userName, userType) {
+  const mailOptions = {
+    from: '"TrafficStars" <adshark00@gmail.com>',
+    to: email,
+    subject: 'Welcome to TrafficStars! 🎉',
+    html: getWelcomeEmailHTML(userName, userType)
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Welcome email sent to ${email}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Welcome email failed:', error);
+    return false;
+  }
+}
+function getPasswordResetEmailHTML(userName, resetLink) {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          line-height: 1.6;
+          color: #333;
+          margin: 0;
+          padding: 0;
+          background-color: #f8f9ff;
+        }
+        .container {
+          max-width: 600px;
+          margin: 40px auto;
+          background: white;
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 4px 24px rgba(23, 28, 107, 0.08);
+        }
+        .header {
+          background: linear-gradient(135deg, #171C6B 0%, #2d4ef5 100%);
+          padding: 40px 30px;
+          text-align: center;
+        }
+        .logo {
+          width: 60px;
+          height: 60px;
+          background: white;
+          border-radius: 12px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 30px;
+          font-weight: 600;
+          color: #171C6B;
+          margin-bottom: 20px;
+        }
+        .header h1 {
+          color: white;
+          margin: 0;
+          font-size: 28px;
+          font-weight: 600;
+        }
+        .content {
+          padding: 40px 30px;
+        }
+        .content h2 {
+          color: #171C6B;
+          font-size: 24px;
+          margin-top: 0;
+          margin-bottom: 20px;
+        }
+        .content p {
+          color: #666;
+          font-size: 16px;
+          margin-bottom: 20px;
+        }
+        .button {
+          display: inline-block;
+          padding: 16px 32px;
+          background: #171C6B;
+          color: white !important;
+          text-decoration: none;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 16px;
+          margin: 20px 0;
+          transition: all 0.2s ease;
+        }
+        .button:hover {
+          background: #151a5c;
+        }
+        .alt-link {
+          background: #f8f9ff;
+          padding: 20px;
+          border-radius: 8px;
+          margin: 20px 0;
+          word-break: break-all;
+        }
+        .alt-link p {
+          margin: 0 0 10px 0;
+          font-size: 14px;
+          color: #666;
+        }
+        .alt-link a {
+          color: #171C6B;
+          font-size: 14px;
+        }
+        .warning {
+          background: #fef2f2;
+          border-left: 4px solid #ef4444;
+          padding: 15px;
+          margin: 20px 0;
+          border-radius: 4px;
+        }
+        .warning p {
+          color: #991b1b;
+          margin: 0;
+          font-size: 14px;
+        }
+        .footer {
+          padding: 30px;
+          background: #f8f9ff;
+          text-align: center;
+          border-top: 1px solid #e0e0e0;
+        }
+        .footer p {
+          color: #999;
+          font-size: 14px;
+          margin: 5px 0;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="logo">T</div>
+          <h1>TrafficStars</h1>
+        </div>
+        
+        <div class="content">
+          <h2>Reset Your Password 🔐</h2>
+          
+          <p>Hi ${userName},</p>
+          
+          <p>We received a request to reset your password. Click the button below to create a new password:</p>
+          
+          <center>
+            <a href="${resetLink}" class="button">Reset Password</a>
+          </center>
+          
+          <div class="alt-link">
+            <p>If the button doesn't work, copy and paste this link into your browser:</p>
+            <a href="${resetLink}">${resetLink}</a>
+          </div>
+          
+          <div class="warning">
+            <p><strong>⚠️ Important:</strong></p>
+            <p>• This link will expire in 1 hour</p>
+            <p>• If you didn't request this, please ignore this email</p>
+            <p>• Your password won't change until you create a new one</p>
+          </div>
+          
+          <p>Need help? Contact our support team at support@trafficstars.com</p>
+        </div>
+        
+        <div class="footer">
+          <p><strong>TrafficStars Ltd.</strong></p>
+          <p>Premium Traffic Solutions for Digital Advertising</p>
+          <p style="margin-top: 15px;">© ${new Date().getFullYear()} TrafficStars. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+function getPasswordResetConfirmationHTML(userName) {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          line-height: 1.6;
+          color: #333;
+          margin: 0;
+          padding: 0;
+          background-color: #f8f9ff;
+        }
+        .container {
+          max-width: 600px;
+          margin: 40px auto;
+          background: white;
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 4px 24px rgba(23, 28, 107, 0.08);
+        }
+        .header {
+          background: linear-gradient(135deg, #171C6B 0%, #2d4ef5 100%);
+          padding: 40px 30px;
+          text-align: center;
+        }
+        .logo {
+          width: 60px;
+          height: 60px;
+          background: white;
+          border-radius: 12px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 30px;
+          font-weight: 600;
+          color: #171C6B;
+          margin-bottom: 20px;
+        }
+        .header h1 {
+          color: white;
+          margin: 0;
+          font-size: 28px;
+        }
+        .content {
+          padding: 40px 30px;
+          text-align: center;
+        }
+        .success-icon {
+          font-size: 64px;
+          margin: 20px 0;
+        }
+        .content h2 {
+          color: #171C6B;
+          font-size: 24px;
+          margin-bottom: 20px;
+        }
+        .content p {
+          color: #666;
+          font-size: 16px;
+          margin-bottom: 20px;
+        }
+        .button {
+          display: inline-block;
+          padding: 16px 32px;
+          background: #171C6B;
+          color: white !important;
+          text-decoration: none;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 16px;
+          margin: 20px 0;
+        }
+        .footer {
+          padding: 30px;
+          background: #f8f9ff;
+          text-align: center;
+          border-top: 1px solid #e0e0e0;
+        }
+        .footer p {
+          color: #999;
+          font-size: 14px;
+          margin: 5px 0;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="logo">T</div>
+          <h1>TrafficStars</h1>
+        </div>
+        
+        <div class="content">
+          <div class="success-icon">✅</div>
+          <h2>Password Reset Successful!</h2>
+          
+          <p>Hi ${userName},</p>
+          
+          <p>Your password has been successfully changed. You can now sign in with your new password.</p>
+          
+          <a href="${process.env.FRONTEND_URL || 'http://localhost:5000'}" class="button">Go to Login</a>
+          
+          <p style="margin-top: 30px; color: #991b1b;">If you didn't make this change, please contact our support team immediately.</p>
+        </div>
+        
+        <div class="footer">
+          <p><strong>TrafficStars Ltd.</strong></p>
+          <p>© ${new Date().getFullYear()} TrafficStars. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+async function sendPasswordResetEmail(email, userName, resetToken) {
+  const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
+  
+  const mailOptions = {
+    from: '"TrafficStars" <adshark00@gmail.com>',
+    to: email,
+    subject: 'Reset Your TrafficStars Password',
+    html: getPasswordResetEmailHTML(userName, resetLink)
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Password reset email sent to ${email}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Password reset email failed:', error);
+    return false;
+  }
+}
+
+async function sendPasswordResetConfirmation(email, userName) {
+  const mailOptions = {
+    from: '"TrafficStars" <adshark00@gmail.com>',
+    to: email,
+    subject: 'Your Password Has Been Reset',
+    html: getPasswordResetConfirmationHTML(userName)
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Password reset confirmation sent to ${email}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Confirmation email failed:', error);
+    return false;
+  }
+}
+
+
+// 4. ADD NEW ROUTES TO server.js
+// -----------------------------------------------------------------------------
+
+// Request Password Reset
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Find user
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    // Always return success (security: don't reveal if email exists)
+    if (!user) {
+      console.log(`⚠️ Password reset requested for non-existent email: ${email}`);
+      return res.json({
+        success: true,
+        message: 'If an account exists with this email, you will receive password reset instructions.'
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    // Save reset token
+    user.passwordResetToken = resetToken;
+    user.passwordResetExpires = resetTokenExpires;
+    await user.save();
+
+    // Send email
+    const emailSent = await sendPasswordResetEmail(user.email, user.name, resetToken);
+
+    if (!emailSent) {
+      console.warn('⚠️ Reset token created but email failed to send');
+    }
+
+    console.log(`✅ Password reset requested for: ${email}`);
+
+    res.json({
+      success: true,
+      message: 'If an account exists with this email, you will receive password reset instructions.'
+    });
+
+  } catch (error) {
+    console.error('❌ Forgot password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to process password reset request'
+    });
+  }
+});
+
+// Verify Reset Token
+app.get('/api/auth/verify-reset-token/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    const user = await User.findOne({
+      passwordResetToken: token,
+      passwordResetExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired password reset token'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Token is valid',
+      email: user.email
+    });
+
+  } catch (error) {
+    console.error('❌ Token verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to verify token'
+    });
+  }
+});
+
+// Reset Password
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword, confirmPassword } = req.body;
+
+    // Validation
+    if (!token || !newPassword || !confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'All fields are required'
+      });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Passwords do not match'
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters long'
+      });
+    }
+
+    // Find user with valid token
+    const user = await User.findOne({
+      passwordResetToken: token,
+      passwordResetExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired password reset token'
+      });
+    }
+
+    // Update password
+    user.password = newPassword;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    user.profile = user.profile || {};
+    user.profile.lastPasswordChange = new Date();
+    await user.save();
+
+    // Send confirmation email
+    await sendPasswordResetConfirmation(user.email, user.name);
+
+    console.log(`✅ Password reset successful for: ${user.email}`);
+
+    res.json({
+      success: true,
+      message: 'Password has been reset successfully. You can now login with your new password.'
+    });
+
+  } catch (error) {
+    console.error('❌ Password reset error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to reset password'
+    });
+  }
+});
 // User Registration
 app.post('/api/auth/register', async (req, res) => {
   try {
@@ -366,32 +1315,37 @@ app.post('/api/auth/register', async (req, res) => {
       });
     }
 
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
     // Create new user
     const user = new User({
       name,
       email,
       password,
-      userType
+      userType,
+      isVerified: false,
+      verificationToken,
+      verificationTokenExpires
     });
 
     await user.save();
 
-    // Generate token
-    const token = user.generateAuthToken();
+    // Send verification email
+    const emailSent = await sendVerificationEmail(email, name, verificationToken);
 
-    console.log(`✅ New ${userType} registered: ${email}`);
+    if (!emailSent) {
+      console.warn('⚠️ User created but verification email failed to send');
+    }
+
+    console.log(`✅ New ${userType} registered: ${email} (verification pending)`);
 
     res.status(201).json({
       success: true,
-      message: 'Account created successfully',
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        userType: user.userType,
-        balance: user.balance
-      },
-      token
+      message: 'Account created successfully! Please check your email to verify your account.',
+      requiresVerification: true,
+      email: email
     });
 
   } catch (error) {
@@ -404,20 +1358,123 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
+// EMAIL VERIFICATION ROUTE
+app.get('/api/auth/verify-email/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    // Find user with this token
+    const user = await User.findOne({
+      verificationToken: token,
+      verificationTokenExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired verification token'
+      });
+    }
+
+    // Update user as verified
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
+    await user.save();
+
+    // Send welcome email
+    await sendWelcomeEmail(user.email, user.name, user.userType);
+
+    console.log(`✅ Email verified for: ${user.email}`);
+
+    res.json({
+      success: true,
+      message: 'Email verified successfully! You can now login.',
+      userType: user.userType
+    });
+
+  } catch (error) {
+    console.error('❌ Email verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Email verification failed. Please try again.'
+    });
+  }
+});
+
+// RESEND VERIFICATION EMAIL ROUTE
+app.post('/api/auth/resend-verification', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'No account found with this email'
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: 'This account is already verified'
+      });
+    }
+
+    // Generate new verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    user.verificationToken = verificationToken;
+    user.verificationTokenExpires = verificationTokenExpires;
+    await user.save();
+
+    // Send new verification email
+    const emailSent = await sendVerificationEmail(user.email, user.name, verificationToken);
+
+    if (!emailSent) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send verification email'
+      });
+    }
+
+    console.log(`✅ Verification email resent to: ${email}`);
+
+    res.json({
+      success: true,
+      message: 'Verification email sent! Please check your inbox.'
+    });
+
+  } catch (error) {
+    console.error('❌ Resend verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to resend verification email'
+    });
+  }
+});
 // User Login
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password, userType, remember } = req.body;
 
-    // Validation
-    if (!email || !password || !userType) {
+    if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Email, password, and user type are required'
+        message: 'Email and password are required'
       });
     }
 
-    // Find user
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({
@@ -426,7 +1483,6 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
 
-    // Check password
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -435,7 +1491,38 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
 
-    // Check user type
+    // SPECIAL HANDLING FOR ADMIN
+    if (user.isAdmin) {
+      user.lastLogin = new Date();
+      await user.save();
+      
+      const token = user.generateAuthToken();
+      
+      console.log('✅ Admin logged in: ' + email);
+
+      return res.json({
+        success: true,
+        message: 'Admin login successful',
+        isAdmin: true,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          userType: user.userType,
+          isAdmin: true
+        },
+        token
+      });
+    }
+
+    // REGULAR USER VALIDATION
+    if (!userType) {
+      return res.status(400).json({
+        success: false,
+        message: 'User type is required'
+      });
+    }
+
     if (user.userType !== userType) {
       return res.status(401).json({
         success: false,
@@ -443,7 +1530,6 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
 
-    // Check if account is active
     if (!user.isActive) {
       return res.status(401).json({
         success: false,
@@ -451,11 +1537,17 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
 
-    // Update last login
+    if (!user.isVerified) {
+      return res.status(403).json({
+        success: false,
+        message: 'Please verify your email address before logging in',
+        requiresVerification: true,
+        email: user.email
+      });
+    }
+
     user.lastLogin = new Date();
     await user.save();
-
-    // Generate token
     const token = user.generateAuthToken();
 
     console.log(`✅ User logged in: ${email} as ${userType}`);
@@ -512,7 +1604,7 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
 app.put('/api/auth/profile', authenticateToken, async (req, res) => {
   try {
     const { name, company, phone, country } = req.body;
-    
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
       {
@@ -548,7 +1640,7 @@ app.put('/api/auth/profile', authenticateToken, async (req, res) => {
 // Logout
 app.post('/api/auth/logout', authenticateToken, (req, res) => {
   console.log(`✅ User logged out: ${req.user.email}`);
-  
+
   res.json({
     success: true,
     message: 'Logged out successfully'
@@ -559,7 +1651,7 @@ app.post('/api/auth/logout', authenticateToken, (req, res) => {
 app.get('/api/user/stats', authenticateToken, async (req, res) => {
   try {
     const userId = req.user._id;
-    
+
     const campaigns = await Campaign.find({ userId });
     const totalCampaigns = campaigns.length;
     const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
@@ -586,16 +1678,47 @@ app.get('/api/user/stats', authenticateToken, async (req, res) => {
     });
   }
 });
+// Helper function to normalize and validate URL
+function normalizeURL(url) {
+  if (!url) return null;
 
+  // Remove whitespace
+  url = url.trim();
+
+  // If already has protocol, validate and return
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+
+  // Remove www. if present at start
+  url = url.replace(/^www\./, '');
+
+  // Add https://
+  return 'https://' + url;
+}
+
+// Helper function to validate domain
+function isValidDomain(url) {
+  try {
+    const urlObj = new URL(url);
+    const domain = urlObj.hostname;
+
+    // Basic domain validation
+    const domainPattern = /^[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+\.?$/;
+    return domainPattern.test(domain);
+  } catch (e) {
+    return false;
+  }
+}
 // Create campaign
 app.post('/api/campaigns', authenticateToken, async (req, res) => {
   try {
     console.log('📄 Creating campaign:', req.body.campaignName);
-    
+
     const campaignData = req.body;
-    
+
     // Validate required fields
-    if (!campaignData.campaignName || !campaignData.landingUrl || !campaignData.campaignType) {
+    if (!campaignData.campaignName || !campaignData.landingUrls || !campaignData.campaignType) {
       return res.status(400).json({
         success: false,
         message: 'Missing required fields'
@@ -610,15 +1733,71 @@ app.post('/api/campaigns', authenticateToken, async (req, res) => {
       });
     }
 
+    // Validate and normalize URLs
+    const landingUrls = Array.isArray(campaignData.landingUrls)
+      ? campaignData.landingUrls
+      : [campaignData.landingUrls];
+
+    if (landingUrls.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'At least one landing page URL is required'
+      });
+    }
+
+    // Normalize and validate each URL
+    const normalizedUrls = [];
+    for (let url of landingUrls) {
+      const normalized = normalizeURL(url);
+
+      if (!normalized || !isValidDomain(normalized)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid URL format: ${url}`
+        });
+      }
+
+      normalizedUrls.push(normalized);
+    }
+
+    // Remove duplicates
+    const uniqueUrls = [...new Set(normalizedUrls)];
+
+    // Validate package data
+    const packageData = campaignData.package || {};
+
+    if (!packageData.impressions || !packageData.totalPrice) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid package data'
+      });
+    }
+
+    // Validate pricing
+    const urlCount = uniqueUrls.length;
+    const pricePerURL = packageData.pricePerURL || 0;
+    const expectedTotal = pricePerURL * urlCount;
+
+    // Allow for small rounding differences
+    if (Math.abs(expectedTotal - packageData.totalPrice) > 0.01) {
+      return res.status(400).json({
+        success: false,
+        message: 'Price calculation mismatch'
+      });
+    }
+
     const campaign = new Campaign({
       campaignName: campaignData.campaignName,
-      landingUrl: campaignData.landingUrl,
+      landingUrls: uniqueUrls,
       campaignType: campaignData.campaignType,
       description: campaignData.description || '',
       trafficPackage: {
-        amount: campaignData.package?.amount || '10000',
-        price: campaignData.package?.price || '150',
-        customAmount: campaignData.package?.customAmount
+        amount: packageData.amount || 'custom',
+        impressions: parseInt(packageData.impressions),
+        cpm: parseFloat(packageData.cpm || 0),
+        pricePerURL: parseFloat(pricePerURL),
+        totalPrice: parseFloat(packageData.totalPrice),
+        urlCount: urlCount
       },
       targeting: {
         targetCountries: campaignData.targetCountries || '',
@@ -630,14 +1809,17 @@ app.post('/api/campaigns', authenticateToken, async (req, res) => {
 
     const savedCampaign = await campaign.save();
     console.log('✅ Campaign created:', savedCampaign._id);
-    
+    console.log(`   URLs: ${uniqueUrls.length} | Total: $${packageData.totalPrice}`);
+
     // Simulate stats generation after 2 seconds
     setTimeout(async () => {
       try {
-        const randomImpressions = Math.floor(Math.random() * 1000) + 100;
+        const impressionsPerURL = parseInt(packageData.impressions);
+        const totalImpressions = impressionsPerURL * urlCount;
+        const randomImpressions = Math.floor(totalImpressions * (0.1 + Math.random() * 0.05));
         const randomClicks = Math.floor(randomImpressions * 0.02) + 1;
-        const spent = parseFloat(campaignData.package?.price || '150') * 0.1;
-        
+        const spent = parseFloat(packageData.totalPrice) * 0.1;
+
         await Campaign.findByIdAndUpdate(savedCampaign._id, {
           'stats.impressions': randomImpressions,
           'stats.clicks': randomClicks,
@@ -645,7 +1827,7 @@ app.post('/api/campaigns', authenticateToken, async (req, res) => {
           'stats.ctr': ((randomClicks / randomImpressions) * 100).toFixed(2),
           status: 'active'
         });
-        
+
         console.log('📊 Campaign stats updated:', savedCampaign._id);
       } catch (updateError) {
         console.log('⚠️ Auto-update failed:', updateError.message);
@@ -672,9 +1854,9 @@ app.get('/api/campaigns', authenticateToken, async (req, res) => {
   try {
     const userId = req.user._id;
     const campaigns = await Campaign.find({ userId }).sort({ createdAt: -1 });
-    
+
     console.log(`📋 Retrieved ${campaigns.length} campaigns for user ${req.user.email}`);
-    
+
     res.json({
       success: true,
       campaigns
@@ -692,29 +1874,29 @@ app.get('/api/campaigns', authenticateToken, async (req, res) => {
 app.patch('/api/campaigns/:id/status', authenticateToken, async (req, res) => {
   try {
     const { status } = req.body;
-    
+
     if (!['pending', 'active', 'paused', 'completed'].includes(status)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid status'
       });
     }
-    
+
     const campaign = await Campaign.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
       { status },
       { new: true }
     );
-    
+
     if (!campaign) {
       return res.status(404).json({
         success: false,
         message: 'Campaign not found or access denied'
       });
     }
-    
+
     console.log(`📄 Campaign ${req.params.id} status changed to ${status}`);
-    
+
     res.json({
       success: true,
       campaign
@@ -735,16 +1917,16 @@ app.delete('/api/campaigns/:id', authenticateToken, async (req, res) => {
       _id: req.params.id,
       userId: req.user._id
     });
-    
+
     if (!campaign) {
       return res.status(404).json({
         success: false,
         message: 'Campaign not found or access denied'
       });
     }
-    
+
     console.log(`🗑️ Campaign ${req.params.id} deleted`);
-    
+
     res.json({
       success: true,
       message: 'Campaign deleted successfully'
@@ -770,7 +1952,19 @@ app.get('/advertiser_admin.html', (req, res) => {
 app.get('/publisher_admin.html', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'publisher_admin.html'));
 });
+app.get('/verify-email', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'verify-email.html'));
+});
+app.get('/reset-password', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'reset-password.html'));
+});
 
+app.get('/forgot-password', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'forgot-password.html'));
+});
+app.get('/admin_panel.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'admin_panel.html'));
+});
 // Handle 404 for API routes
 
 
@@ -788,7 +1982,7 @@ app.use((error, req, res, next) => {
 app.post('/api/payments/create-intent', authenticateToken, async (req, res) => {
   try {
     const { amount, currency, description } = req.body;
-    
+
     // Validate amount
     if (!amount || amount < 10000) { // $100 minimum in cents
       return res.status(400).json({
@@ -796,26 +1990,26 @@ app.post('/api/payments/create-intent', authenticateToken, async (req, res) => {
         message: 'Minimum amount is $100'
       });
     }
-    
+
     if (amount > 10000000) { // $100,000 maximum
       return res.status(400).json({
         success: false,
         message: 'Maximum amount is $100,000'
       });
     }
-    
+
     // In production, you would create a Stripe payment intent here
     // For now, we'll simulate it
     const clientSecret = 'pi_' + Math.random().toString(36).substring(2, 15) + '_secret_' + Math.random().toString(36).substring(2, 15);
-    
+
     console.log(`💳 Payment intent created for ${req.user.email}: $${(amount / 100).toFixed(2)}`);
-    
+
     res.json({
       success: true,
       clientSecret: clientSecret,
       amount: amount
     });
-    
+
   } catch (error) {
     console.error('❌ Payment intent error:', error);
     res.status(500).json({
@@ -829,7 +2023,7 @@ app.post('/api/payments/create-intent', authenticateToken, async (req, res) => {
 app.post('/api/payments/confirm', authenticateToken, async (req, res) => {
   try {
     const { amount, transactionId, paymentMethod } = req.body;
-    
+
     // Validate
     if (!amount || amount < 100) {
       return res.status(400).json({
@@ -837,29 +2031,29 @@ app.post('/api/payments/confirm', authenticateToken, async (req, res) => {
         message: 'Invalid amount'
       });
     }
-    
+
     if (!transactionId) {
       return res.status(400).json({
         success: false,
         message: 'Transaction ID required'
       });
     }
-    
+
     // Update user balance
     const user = await User.findById(req.user._id);
     user.balance = (user.balance || 0) + amount;
     await user.save();
-    
+
     console.log(`✅ Payment confirmed for ${user.email}: $${amount} via ${paymentMethod}`);
     console.log(`💰 New balance: $${user.balance.toFixed(2)}`);
-    
+
     res.json({
       success: true,
       message: 'Payment confirmed successfully',
       newBalance: user.balance,
       transactionId: transactionId
     });
-    
+
   } catch (error) {
     console.error('❌ Payment confirmation error:', error);
     res.status(500).json({
@@ -885,12 +2079,12 @@ app.get('/api/payments/history', authenticateToken, async (req, res) => {
         description: 'Account Deposit'
       }
     ];
-    
+
     res.json({
       success: true,
       transactions: mockTransactions
     });
-    
+
   } catch (error) {
     console.error('❌ Payment history error:', error);
     res.status(500).json({
@@ -910,7 +2104,7 @@ function generateAdCode(userId, placementType) {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 10);
   const placementId = `${userId.toString().substring(0, 8)}_${timestamp}_${random}`;
-  
+
   return `<!-- TrafficStars ${placementType.toUpperCase()} Ad Code -->
 <div id="ts-ad-${placementId}" class="ts-ad-container"></div>
 <script async src="https://cdn.trafficstars.com/ads.js"></script>
@@ -932,18 +2126,18 @@ function generateAdCode(userId, placementType) {
 app.get('/api/placements', authenticateToken, async (req, res) => {
   try {
     const userId = req.user._id;
-    
+
     if (req.user.userType !== 'publisher') {
       return res.status(403).json({
         success: false,
         message: 'Only publishers can access placements'
       });
     }
-    
+
     const placements = await Placement.find({ userId }).sort({ createdAt: -1 });
-    
+
     console.log(`📋 Retrieved ${placements.length} placements for publisher ${req.user.email}`);
-    
+
     res.json({
       success: true,
       placements
@@ -961,25 +2155,25 @@ app.get('/api/placements', authenticateToken, async (req, res) => {
 app.post('/api/placements', authenticateToken, async (req, res) => {
   try {
     console.log('📄 Creating placement:', req.body.placementName);
-    
+
     if (req.user.userType !== 'publisher') {
       return res.status(403).json({
         success: false,
         message: 'Only publishers can create placements'
       });
     }
-    
+
     const placementData = req.body;
-    
+
     if (!placementData.placementName || !placementData.websiteUrl || !placementData.placementType) {
       return res.status(400).json({
         success: false,
         message: 'Missing required fields'
       });
     }
-    
+
     const adCode = generateAdCode(req.user._id, placementData.placementType);
-    
+
     const placement = new Placement({
       placementName: placementData.placementName,
       websiteUrl: placementData.websiteUrl,
@@ -1000,10 +2194,10 @@ app.post('/api/placements', authenticateToken, async (req, res) => {
       adCode: adCode,
       userId: req.user._id
     });
-    
+
     const savedPlacement = await placement.save();
     console.log('✅ Placement created:', savedPlacement._id);
-    
+
     // Simulate stats after 2 seconds
     setTimeout(async () => {
       try {
@@ -1011,7 +2205,7 @@ app.post('/api/placements', authenticateToken, async (req, res) => {
         const randomClicks = Math.floor(randomImpressions * 0.015) + 1;
         const revenue = (randomImpressions / 1000) * parseFloat(placementData.rate || '5.00');
         const rpm = randomImpressions > 0 ? (revenue / randomImpressions * 1000).toFixed(2) : 0;
-        
+
         await Placement.findByIdAndUpdate(savedPlacement._id, {
           'stats.impressions': randomImpressions,
           'stats.clicks': randomClicks,
@@ -1019,13 +2213,13 @@ app.post('/api/placements', authenticateToken, async (req, res) => {
           'stats.rpm': rpm,
           status: 'active'
         });
-        
+
         console.log('📊 Placement stats updated:', savedPlacement._id);
       } catch (updateError) {
         console.log('⚠️ Auto-update failed:', updateError.message);
       }
     }, 2000);
-    
+
     res.status(201).json({
       success: true,
       message: 'Placement created successfully and pending approval',
@@ -1045,29 +2239,29 @@ app.post('/api/placements', authenticateToken, async (req, res) => {
 app.patch('/api/placements/:id/status', authenticateToken, async (req, res) => {
   try {
     const { status } = req.body;
-    
+
     if (!['pending', 'active', 'paused', 'rejected'].includes(status)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid status'
       });
     }
-    
+
     const placement = await Placement.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
       { status },
       { new: true }
     );
-    
+
     if (!placement) {
       return res.status(404).json({
         success: false,
         message: 'Placement not found or access denied'
       });
     }
-    
+
     console.log(`📄 Placement ${req.params.id} status changed to ${status}`);
-    
+
     res.json({
       success: true,
       placement
@@ -1088,16 +2282,16 @@ app.delete('/api/placements/:id', authenticateToken, async (req, res) => {
       _id: req.params.id,
       userId: req.user._id
     });
-    
+
     if (!placement) {
       return res.status(404).json({
         success: false,
         message: 'Placement not found or access denied'
       });
     }
-    
+
     console.log(`🗑️ Placement ${req.params.id} deleted`);
-    
+
     res.json({
       success: true,
       message: 'Placement deleted successfully'
@@ -1115,7 +2309,7 @@ app.delete('/api/placements/:id', authenticateToken, async (req, res) => {
 app.get('/api/publisher/stats', authenticateToken, async (req, res) => {
   try {
     const userId = req.user._id;
-    
+
     const placements = await Placement.find({ userId });
     const totalPlacements = placements.length;
     const activePlacements = placements.filter(p => p.status === 'active').length;
@@ -1123,7 +2317,7 @@ app.get('/api/publisher/stats', authenticateToken, async (req, res) => {
     const totalClicks = placements.reduce((sum, p) => sum + (p.stats?.clicks || 0), 0);
     const totalRevenue = placements.reduce((sum, p) => sum + (p.stats?.revenue || 0), 0);
     const avgRPM = totalImpressions > 0 ? ((totalRevenue / totalImpressions) * 1000).toFixed(2) : 0;
-    
+
     res.json({
       success: true,
       totalPlacements,
@@ -1153,7 +2347,7 @@ app.get('/api/publisher/profile', authenticateToken, async (req, res) => {
     }
 
     const user = await User.findById(req.user._id).select('-password');
-    
+
     res.json({
       success: true,
       profile: {
@@ -1256,9 +2450,9 @@ app.get('/api/websites', authenticateToken, async (req, res) => {
     }
 
     const websites = await Website.find({ userId: req.user._id }).sort({ createdAt: -1 });
-    
+
     console.log(`📋 Retrieved ${websites.length} websites for ${req.user.email}`);
-    
+
     res.json({
       success: true,
       websites
@@ -1283,7 +2477,7 @@ app.post('/api/websites', authenticateToken, async (req, res) => {
     }
 
     const websiteData = req.body;
-    
+
     // Validate required fields
     if (!websiteData.websiteName || !websiteData.websiteUrl || !websiteData.category) {
       return res.status(400).json({
@@ -1430,19 +2624,19 @@ app.delete('/api/websites/:id', authenticateToken, async (req, res) => {
 // Helper function to generate mock analytics data
 function generateMockAnalytics(placements, timeRange = 'week') {
   const days = timeRange === 'week' ? 7 : timeRange === 'month' ? 30 : timeRange === 'year' ? 365 : 1;
-  
+
   // Generate daily data
   const dailyData = [];
   const now = new Date();
-  
+
   for (let i = days - 1; i >= 0; i--) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
-    
+
     const impressions = Math.floor(Math.random() * 10000) + 5000;
     const clicks = Math.floor(impressions * (Math.random() * 0.03 + 0.01));
     const revenue = (impressions / 1000) * (Math.random() * 3 + 2);
-    
+
     dailyData.push({
       date: date.toISOString().split('T')[0],
       impressions,
@@ -1452,7 +2646,7 @@ function generateMockAnalytics(placements, timeRange = 'week') {
       ctr: parseFloat(((clicks / impressions) * 100).toFixed(2))
     });
   }
-  
+
   // Geographic data
   const geoData = [
     { country: 'United States', impressions: 125000, clicks: 2500, revenue: 625.50, flag: '🇺🇸' },
@@ -1464,14 +2658,14 @@ function generateMockAnalytics(placements, timeRange = 'week') {
     { country: 'India', impressions: 125000, clicks: 2500, revenue: 312.50, flag: '🇮🇳' },
     { country: 'Brazil', impressions: 55000, clicks: 1100, revenue: 137.50, flag: '🇧🇷' }
   ];
-  
+
   // Device data
   const deviceData = [
     { device: 'Desktop', impressions: 285000, clicks: 5700, revenue: 1425.00, percentage: 48 },
     { device: 'Mobile', impressions: 240000, clicks: 4800, revenue: 1200.00, percentage: 40 },
     { device: 'Tablet', impressions: 75000, clicks: 1500, revenue: 375.00, percentage: 12 }
   ];
-  
+
   // Browser data
   const browserData = [
     { browser: 'Chrome', percentage: 45, color: '#4285F4' },
@@ -1480,7 +2674,7 @@ function generateMockAnalytics(placements, timeRange = 'week') {
     { browser: 'Edge', percentage: 10, color: '#0078D7' },
     { browser: 'Other', percentage: 5, color: '#94a3b8' }
   ];
-  
+
   // Top placements performance
   const topPlacements = placements.slice(0, 5).map((placement, index) => ({
     id: placement._id,
@@ -1491,17 +2685,17 @@ function generateMockAnalytics(placements, timeRange = 'week') {
     rpm: parseFloat((Math.random() * 5 + 3).toFixed(2)),
     ctr: parseFloat((Math.random() * 2 + 1).toFixed(2))
   }));
-  
+
   // Calculate totals
   const totals = dailyData.reduce((acc, day) => ({
     impressions: acc.impressions + day.impressions,
     clicks: acc.clicks + day.clicks,
     revenue: acc.revenue + day.revenue
   }), { impressions: 0, clicks: 0, revenue: 0 });
-  
+
   totals.ctr = ((totals.clicks / totals.impressions) * 100).toFixed(2);
   totals.rpm = ((totals.revenue / totals.impressions) * 1000).toFixed(2);
-  
+
   // Hour of day performance
   const hourlyData = Array.from({ length: 24 }, (_, hour) => ({
     hour: `${hour.toString().padStart(2, '0')}:00`,
@@ -1509,7 +2703,7 @@ function generateMockAnalytics(placements, timeRange = 'week') {
     clicks: Math.floor(Math.random() * 100) + 40,
     revenue: parseFloat((Math.random() * 30 + 10).toFixed(2))
   }));
-  
+
   return {
     overview: totals,
     dailyData,
@@ -1531,10 +2725,10 @@ app.get('/api/analytics/overview', authenticateToken, async (req, res) => {
         message: 'Only publishers can access analytics'
       });
     }
-    
+
     const timeRange = req.query.range || 'week';
     const placements = await Placement.find({ userId: req.user._id });
-    
+
     if (placements.length === 0) {
       return res.json({
         success: true,
@@ -1556,11 +2750,11 @@ app.get('/api/analytics/overview', authenticateToken, async (req, res) => {
         }
       });
     }
-    
+
     const analytics = generateMockAnalytics(placements, timeRange);
-    
+
     console.log(`📊 Analytics data generated for ${req.user.email} (${timeRange})`);
-    
+
     res.json({
       success: true,
       analytics
@@ -1583,9 +2777,9 @@ app.get('/api/analytics/revenue', authenticateToken, async (req, res) => {
         message: 'Only publishers can access analytics'
       });
     }
-    
+
     const timeRange = req.query.range || 'month';
-    
+
     // Revenue by placement type
     const revenueByType = [
       { type: 'Banner', revenue: 1250.50, percentage: 35 },
@@ -1594,7 +2788,7 @@ app.get('/api/analytics/revenue', authenticateToken, async (req, res) => {
       { type: 'Mobile', revenue: 535.50, percentage: 15 },
       { type: 'Popup', revenue: 178.50, percentage: 5 }
     ];
-    
+
     // Revenue by category
     const revenueByCategory = [
       { category: 'Technology', revenue: 1425.00 },
@@ -1603,7 +2797,7 @@ app.get('/api/analytics/revenue', authenticateToken, async (req, res) => {
       { category: 'Lifestyle', revenue: 534.38 },
       { category: 'Other', revenue: 356.87 }
     ];
-    
+
     res.json({
       success: true,
       revenue: {
@@ -1630,7 +2824,7 @@ app.get('/api/analytics/performance', authenticateToken, async (req, res) => {
         message: 'Only publishers can access analytics'
       });
     }
-    
+
     const metrics = {
       fillRate: 94.5,
       viewability: 87.3,
@@ -1644,7 +2838,7 @@ app.get('/api/analytics/performance', authenticateToken, async (req, res) => {
         returning: 38
       }
     };
-    
+
     res.json({
       success: true,
       metrics
@@ -1667,11 +2861,11 @@ app.post('/api/analytics/export', authenticateToken, async (req, res) => {
         message: 'Only publishers can export analytics'
       });
     }
-    
+
     const { format, timeRange } = req.body;
-    
+
     console.log(`📥 Analytics export requested: ${format} (${timeRange})`);
-    
+
     res.json({
       success: true,
       message: 'Report generation started',
@@ -1729,7 +2923,7 @@ app.post('/api/websites/:id/verify', authenticateToken, async (req, res) => {
 app.get('/api/settings', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password');
-    
+
     res.json({
       success: true,
       settings: {
@@ -1769,14 +2963,14 @@ app.get('/api/settings', authenticateToken, async (req, res) => {
 app.put('/api/settings/account', authenticateToken, async (req, res) => {
   try {
     const { name, company, phone, country } = req.body;
-    
+
     if (!name || name.trim().length < 2) {
       return res.status(400).json({
         success: false,
         message: 'Name must be at least 2 characters'
       });
     }
-    
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
       {
@@ -1787,9 +2981,9 @@ app.put('/api/settings/account', authenticateToken, async (req, res) => {
       },
       { new: true }
     ).select('-password');
-    
+
     console.log(`✅ Account info updated for ${user.email}`);
-    
+
     res.json({
       success: true,
       message: 'Account information updated successfully',
@@ -1814,7 +3008,7 @@ app.put('/api/settings/account', authenticateToken, async (req, res) => {
 app.put('/api/settings/password', authenticateToken, async (req, res) => {
   try {
     const { currentPassword, newPassword, confirmPassword } = req.body;
-    
+
     // Validation
     if (!currentPassword || !newPassword || !confirmPassword) {
       return res.status(400).json({
@@ -1822,24 +3016,24 @@ app.put('/api/settings/password', authenticateToken, async (req, res) => {
         message: 'All password fields are required'
       });
     }
-    
+
     if (newPassword !== confirmPassword) {
       return res.status(400).json({
         success: false,
         message: 'New passwords do not match'
       });
     }
-    
+
     if (newPassword.length < 6) {
       return res.status(400).json({
         success: false,
         message: 'Password must be at least 6 characters'
       });
     }
-    
+
     // Get user with password
     const user = await User.findById(req.user._id);
-    
+
     // Verify current password
     const isPasswordValid = await user.comparePassword(currentPassword);
     if (!isPasswordValid) {
@@ -1848,15 +3042,15 @@ app.put('/api/settings/password', authenticateToken, async (req, res) => {
         message: 'Current password is incorrect'
       });
     }
-    
+
     // Update password
     user.password = newPassword;
     user.profile = user.profile || {};
     user.profile.lastPasswordChange = new Date();
     await user.save();
-    
+
     console.log(`✅ Password changed for ${user.email}`);
-    
+
     res.json({
       success: true,
       message: 'Password changed successfully'
@@ -1874,7 +3068,7 @@ app.put('/api/settings/password', authenticateToken, async (req, res) => {
 app.put('/api/settings/notifications', authenticateToken, async (req, res) => {
   try {
     const { emailNotifications, paymentAlerts, performanceReports, weeklyDigest } = req.body;
-    
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
       {
@@ -1885,9 +3079,9 @@ app.put('/api/settings/notifications', authenticateToken, async (req, res) => {
       },
       { new: true }
     ).select('-password');
-    
+
     console.log(`✅ Notifications updated for ${user.email}`);
-    
+
     res.json({
       success: true,
       message: 'Notification preferences updated successfully'
@@ -1905,14 +3099,14 @@ app.put('/api/settings/notifications', authenticateToken, async (req, res) => {
 app.put('/api/settings/payment', authenticateToken, async (req, res) => {
   try {
     const { paymentMethod, minimumPayout } = req.body;
-    
+
     if (minimumPayout && (minimumPayout < 50 || minimumPayout > 10000)) {
       return res.status(400).json({
         success: false,
         message: 'Minimum payout must be between $50 and $10,000'
       });
     }
-    
+
     const updateData = {};
     if (paymentMethod) {
       updateData['profile.paymentMethod'] = paymentMethod;
@@ -1920,15 +3114,15 @@ app.put('/api/settings/payment', authenticateToken, async (req, res) => {
     if (minimumPayout) {
       updateData['profile.minimumPayout'] = minimumPayout;
     }
-    
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
       updateData,
       { new: true }
     ).select('-password');
-    
+
     console.log(`✅ Payment settings updated for ${user.email}`);
-    
+
     res.json({
       success: true,
       message: 'Payment settings updated successfully'
@@ -1941,20 +3135,325 @@ app.put('/api/settings/payment', authenticateToken, async (req, res) => {
     });
   }
 });
+app.get('/api/admin/users', authenticateAdmin, async (req, res) => {
+  try {
+    const users = await User.find({ isAdmin: { $ne: true } })
+      .select('-password')
+      .sort({ createdAt: -1 });
 
+    // Get campaign and placement counts for each user
+    const usersWithStats = await Promise.all(users.map(async (user) => {
+      const campaigns = await Campaign.find({ userId: user._id });
+      const placements = await Placement.find({ userId: user._id });
+      
+      const totalSpent = campaigns.reduce((sum, c) => sum + (c.stats?.spent || 0), 0);
+      const totalRevenue = placements.reduce((sum, p) => sum + (p.stats?.revenue || 0), 0);
+
+      return {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        userType: user.userType,
+        balance: user.balance || 0,
+        isActive: user.isActive,
+        isVerified: user.isVerified,
+        campaignCount: campaigns.length,
+        placementCount: placements.length,
+        totalSpent: totalSpent.toFixed(2),
+        totalRevenue: totalRevenue.toFixed(2),
+        lastLogin: user.lastLogin,
+        createdAt: user.createdAt
+      };
+    }));
+
+    console.log(`📊 Admin fetched ${users.length} users`);
+
+    res.json({
+      success: true,
+      users: usersWithStats
+    });
+  } catch (error) {
+    console.error('❌ Admin users fetch error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch users'
+    });
+  }
+});
+
+// Get All Campaigns (Admin Only)
+app.get('/api/admin/campaigns', authenticateAdmin, async (req, res) => {
+  try {
+    const campaigns = await Campaign.find()
+      .populate('userId', 'name email userType')
+      .sort({ createdAt: -1 });
+
+    console.log(`📊 Admin fetched ${campaigns.length} campaigns`);
+
+    res.json({
+      success: true,
+      campaigns
+    });
+  } catch (error) {
+    console.error('❌ Admin campaigns fetch error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch campaigns'
+    });
+  }
+});
+
+// Get All Placements (Admin Only)
+app.get('/api/admin/placements', authenticateAdmin, async (req, res) => {
+  try {
+    const placements = await Placement.find()
+      .populate('userId', 'name email userType')
+      .sort({ createdAt: -1 });
+
+    console.log(`📊 Admin fetched ${placements.length} placements`);
+
+    res.json({
+      success: true,
+      placements
+    });
+  } catch (error) {
+    console.error('❌ Admin placements fetch error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch placements'
+    });
+  }
+});
+
+// Update Campaign Status (Admin Override)
+app.patch('/api/admin/campaigns/:id/status', authenticateAdmin, async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    if (!['pending', 'active', 'paused', 'completed'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status'
+      });
+    }
+
+    const campaign = await Campaign.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    ).populate('userId', 'name email');
+
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: 'Campaign not found'
+      });
+    }
+
+    console.log(`✅ Admin changed campaign ${campaign._id} status to ${status}`);
+    console.log(`   User: ${campaign.userId.email}`);
+
+    res.json({
+      success: true,
+      message: 'Campaign status updated successfully',
+      campaign
+    });
+  } catch (error) {
+    console.error('❌ Admin campaign update error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update campaign'
+    });
+  }
+});
+
+// Top-up User Balance (Admin Only)
+app.post('/api/admin/users/:id/topup', authenticateAdmin, async (req, res) => {
+  try {
+    const { amount, note } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid amount'
+      });
+    }
+
+    if (amount > 100000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Maximum top-up amount is $100,000'
+      });
+    }
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    const oldBalance = user.balance || 0;
+    user.balance = oldBalance + parseFloat(amount);
+    await user.save();
+
+    console.log(`💰 Admin topped up ${user.email} balance`);
+    console.log(`   Amount: $${amount}`);
+    console.log(`   Old Balance: $${oldBalance.toFixed(2)}`);
+    console.log(`   New Balance: $${user.balance.toFixed(2)}`);
+    console.log(`   Note: ${note || 'No note'}`);
+
+    res.json({
+      success: true,
+      message: 'Balance topped up successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        oldBalance: oldBalance.toFixed(2),
+        newBalance: user.balance.toFixed(2),
+        amountAdded: parseFloat(amount).toFixed(2)
+      }
+    });
+  } catch (error) {
+    console.error('❌ Admin balance top-up error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to top-up balance'
+    });
+  }
+});
+
+// Toggle User Active Status (Admin Only)
+app.patch('/api/admin/users/:id/toggle-active', authenticateAdmin, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    user.isActive = !user.isActive;
+    await user.save();
+
+    console.log(`✅ Admin ${user.isActive ? 'activated' : 'deactivated'} user ${user.email}`);
+
+    res.json({
+      success: true,
+      message: `User ${user.isActive ? 'activated' : 'deactivated'} successfully`,
+      user: {
+        id: user._id,
+        email: user.email,
+        isActive: user.isActive
+      }
+    });
+  } catch (error) {
+    console.error('❌ Admin user toggle error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to toggle user status'
+    });
+  }
+});
+
+// Get Admin Dashboard Stats
+app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments({ isAdmin: { $ne: true } });
+    const activeUsers = await User.countDocuments({ isAdmin: { $ne: true }, isActive: true });
+    const totalCampaigns = await Campaign.countDocuments();
+    const activeCampaigns = await Campaign.countDocuments({ status: 'active' });
+    const totalPlacements = await Placement.countDocuments();
+    const activePlacements = await Placement.countDocuments({ status: 'active' });
+
+    const allCampaigns = await Campaign.find();
+    const totalRevenue = allCampaigns.reduce((sum, c) => sum + (c.stats?.spent || 0), 0);
+
+    const allPlacements = await Placement.find();
+    const totalPayouts = allPlacements.reduce((sum, p) => sum + (p.stats?.revenue || 0), 0);
+
+    res.json({
+      success: true,
+      stats: {
+        users: {
+          total: totalUsers,
+          active: activeUsers,
+          inactive: totalUsers - activeUsers
+        },
+        campaigns: {
+          total: totalCampaigns,
+          active: activeCampaigns
+        },
+        placements: {
+          total: totalPlacements,
+          active: activePlacements
+        },
+        revenue: {
+          total: totalRevenue.toFixed(2),
+          payouts: totalPayouts.toFixed(2),
+          profit: (totalRevenue - totalPayouts).toFixed(2)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('❌ Admin stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch admin stats'
+    });
+  }
+});
+
+// Delete User (Admin Only)
+app.delete('/api/admin/users/:id', authenticateAdmin, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Delete all user data
+    await Campaign.deleteMany({ userId: user._id });
+    await Placement.deleteMany({ userId: user._id });
+    await Website.deleteMany({ userId: user._id });
+    await User.findByIdAndDelete(user._id);
+
+    console.log(`🗑️ Admin deleted user: ${user.email}`);
+
+    res.json({
+      success: true,
+      message: 'User and all associated data deleted successfully'
+    });
+  } catch (error) {
+    console.error('❌ Admin user delete error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete user'
+    });
+  }
+});
 // Toggle Two-Factor Authentication
 app.put('/api/settings/2fa', authenticateToken, async (req, res) => {
   try {
     const { enabled } = req.body;
-    
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { 'profile.twoFactorEnabled': enabled === true },
       { new: true }
     ).select('-password');
-    
+
     console.log(`✅ 2FA ${enabled ? 'enabled' : 'disabled'} for ${user.email}`);
-    
+
     res.json({
       success: true,
       message: `Two-factor authentication ${enabled ? 'enabled' : 'disabled'} successfully`
@@ -1972,35 +3471,35 @@ app.put('/api/settings/2fa', authenticateToken, async (req, res) => {
 app.delete('/api/settings/account', authenticateToken, async (req, res) => {
   try {
     const { password, confirmation } = req.body;
-    
+
     if (confirmation !== 'DELETE') {
       return res.status(400).json({
         success: false,
         message: 'Please type DELETE to confirm'
       });
     }
-    
+
     // Verify password
     const user = await User.findById(req.user._id);
     const isPasswordValid = await user.comparePassword(password);
-    
+
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
         message: 'Incorrect password'
       });
     }
-    
+
     // Delete user's data
     await Placement.deleteMany({ userId: req.user._id });
     await Website.deleteMany({ userId: req.user._id });
     await Campaign.deleteMany({ userId: req.user._id });
-    
+
     // Delete user account
     await User.findByIdAndDelete(req.user._id);
-    
+
     console.log(`🗑️ Account deleted: ${user.email}`);
-    
+
     res.json({
       success: true,
       message: 'Account deleted successfully'
@@ -2035,7 +3534,7 @@ app.get('/api/settings/sessions', authenticateToken, async (req, res) => {
         current: false
       }
     ];
-    
+
     res.json({
       success: true,
       sessions
@@ -2053,9 +3552,9 @@ app.get('/api/settings/sessions', authenticateToken, async (req, res) => {
 app.delete('/api/settings/sessions/:sessionId', authenticateToken, async (req, res) => {
   try {
     const { sessionId } = req.params;
-    
+
     console.log(`✅ Session ${sessionId} logged out for ${req.user.email}`);
-    
+
     res.json({
       success: true,
       message: 'Session logged out successfully'

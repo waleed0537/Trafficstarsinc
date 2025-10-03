@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification - TrafficStars</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .verification-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(23, 28, 107, 0.08);
+            border: 1px solid #e0e0e0;
+            width: 100%;
+            max-width: 500px;
+            padding: 48px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .verification-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #171C6B 0%, #2d4ef5 100%);
+        }
+
+        .icon-container {
+            width: 80px;
+            height: 80px;
+            background: #f8f9ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 40px;
+        }
+
+        .icon-container.loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+
+        .icon-container.success {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .icon-container.error {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            background: #171C6B;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            position: relative;
+        }
+
+        .brand-logo::after {
+            content: 'T';
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #171C6B;
+            margin-bottom: 16px;
+        }
+
+        .message {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: #171C6B;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            margin: 8px;
+        }
+
+        .button:hover {
+            background: #151a5c;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(23, 28, 107, 0.3);
+        }
+
+        .button.secondary {
+            background: #f8f9ff;
+            color: #171C6B;
+        }
+
+        .button.secondary:hover {
+            background: #e8edff;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f8f9ff;
+            border-top: 4px solid #171C6B;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 24px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .countdown {
+            font-size: 14px;
+            color: #999;
+            margin-top: 16px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="verification-container">
+        <div class="brand-logo"></div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="hidden">
+            <div class="loading-spinner"></div>
+            <h1>Verifying Your Email</h1>
+            <p class="message">Please wait while we verify your email address...</p>
+        </div>
+
+        <!-- Success State -->
+        <div id="successState" class="hidden">
+            <div class="icon-container success">✓</div>
+            <h1>Email Verified Successfully!</h1>
+            <p class="message">Your email has been verified. You can now sign in to your TrafficStars account.</p>
+            <a href="/" class="button">Go to Login</a>
+            <p class="countdown">Redirecting in <span id="countdown">5</span> seconds...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden">
+            <div class="icon-container error">✕</div>
+            <h1>Verification Failed</h1>
+            <p class="message" id="errorMessage">The verification link is invalid or has expired.</p>
+            <button onclick="resendVerification()" class="button">Resend Verification Email</button>
+            <a href="/" class="button secondary">Back to Login</a>
+        </div>
+
+        <!-- Resend State -->
+        <div id="resendState" class="hidden">
+            <div class="icon-container">📧</div>
+            <h1>Resend Verification Email</h1>
+            <p class="message">Enter your email address to receive a new verification link.</p>
+            <form id="resendForm" style="max-width: 100%;">
+                <input 
+                    type="email" 
+                    id="resendEmail" 
+                    placeholder="Enter your email"
+                    required
+                    style="width: 100%; padding: 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 15px; margin-bottom: 16px; font-family: inherit;"
+                >
+                <button type="submit" class="button" style="width: 100%;">Send Verification Email</button>
+            </form>
+            <button onclick="showError()" class="button secondary" style="margin-top: 8px;">Cancel</button>
+        </div>
+
+        <!-- Email Sent Confirmation -->
+        <div id="emailSentState" class="hidden">
+            <div class="icon-container success">✓</div>
+            <h1>Verification Email Sent!</h1>
+            <p class="message">Please check your email inbox and click the verification link. Don't forget to check your spam folder.</p>
+            <a href="/" class="button">Back to Login</a>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin + '/api';
+
+        // Get token from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        // Show loading state
+        document.getElementById('loadingState').classList.remove('hidden');
+
+        if (!token) {
+            showError('No verification token provided');
+        } else {
+            verifyEmail(token);
+        }
+
+        async function verifyEmail(token) {
+            try {
+                const response = await fetch(`${API_BASE}/auth/verify-email/${token}`, {
+                    method: 'GET'
+                });
+
+                const data = await response.json();
+
+                document.getElementById('loadingState').classList.add('hidden');
+
+                if (data.success) {
+                    showSuccess(data.userType);
+                } else {
+                    showError(data.message);
+                }
+            } catch (error) {
+                console.error('Verification error:', error);
+                document.getElementById('loadingState').classList.add('hidden');
+                showError('Network error. Please check your connection and try again.');
+            }
+        }
+
+        function showSuccess(userType) {
+            document.getElementById('successState').classList.remove('hidden');
+            
+            // Countdown and redirect
+            let seconds = 5;
+            const countdownElement = document.getElementById('countdown');
+            
+            const interval = setInterval(() => {
+                seconds--;
+                countdownElement.textContent = seconds;
+                
+                if (seconds <= 0) {
+                    clearInterval(interval);
+                    window.location.href = '/';
+                }
+            }, 1000);
+        }
+
+        function showError(message) {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('successState').classList.add('hidden');
+            document.getElementById('resendState').classList.add('hidden');
+            
+            document.getElementById('errorMessage').textContent = message || 'The verification link is invalid or has expired.';
+            document.getElementById('errorState').classList.remove('hidden');
+        }
+
+        function resendVerification() {
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('resendState').classList.remove('hidden');
+        }
+
+        document.getElementById('resendForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('resendEmail').value;
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/resend-verification`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('resendState').classList.add('hidden');
+                    document.getElementById('emailSentState').classList.remove('hidden');
+                } else {
+                    alert(data.message || 'Failed to send verification email');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Resend error:', error);
+                alert('Network error. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+    </script>
+</body>
+</html>
