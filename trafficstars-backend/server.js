@@ -24,11 +24,16 @@ app.use(express.static(path.join(__dirname, '..')));
 // MongoDB Connection
 const MONGODB_URI = 'mongodb+srv://adshark00:0KKX2YSBGY9Zrz21@cluster0.g7lpz.mongodb.net/trafficstarsltd?retryWrites=true&w=majority&appName=Cluster0';
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
   auth: {
     user: 'adshark00@gmail.com',
     pass: 'iasy nmqs bzpa favn',
   },
+  tls: {
+    rejectUnauthorized: false
+  }
 });
 
 transporter.verify(function (error, success) {
