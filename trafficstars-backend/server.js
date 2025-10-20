@@ -13,7 +13,10 @@ const PORT = process.env.PORT || 5000;
 
 // JWT Secret (in production, use environment variable)
 const JWT_SECRET = process.env.JWT_SECRET || 'trafficstars_secret_key_2024';
-
+// Frontend URL configuration
+const FRONTEND_URL = process.env.FRONTEND_URL || 
+                     process.env.RENDER_EXTERNAL_URL || 
+                     'https://trafficstarsltd.com';
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -732,7 +735,7 @@ function getWelcomeEmailHTML(userName, userType) {
           <p>Congratulations, ${userName}! Your email has been verified and your ${userType} account is now active.</p>
           
           <center>
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:5000'}" class="button">Go to Dashboard</a>
+<a href="${FRONTEND_URL}" class="button">Go to Dashboard</a>
           </center>
           
           <div class="features">
@@ -768,7 +771,7 @@ function getWelcomeEmailHTML(userName, userType) {
 
 // Function to send verification email
 async function sendVerificationEmail(email, userName, verificationToken) {
-  const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/verify-email?token=${verificationToken}`;
+const verificationLink = `${FRONTEND_URL}/verify-email?token=${verificationToken}`;
 
   const mailOptions = {
     from: '"TrafficStars" <adshark00@gmail.com>',
@@ -1067,7 +1070,7 @@ function getPasswordResetConfirmationHTML(userName) {
           
           <p>Your password has been successfully changed. You can now sign in with your new password.</p>
           
-          <a href="${process.env.FRONTEND_URL || 'http://localhost:5000'}" class="button">Go to Login</a>
+<a href="${FRONTEND_URL}" class="button">Go to Login</a>
           
           <p style="margin-top: 30px; color: #991b1b;">If you didn't make this change, please contact our support team immediately.</p>
         </div>
@@ -1082,7 +1085,7 @@ function getPasswordResetConfirmationHTML(userName) {
   `;
 }
 async function sendPasswordResetEmail(email, userName, resetToken) {
-  const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/reset-password?token=${resetToken}`;
+const resetLink = `${FRONTEND_URL}/reset-password?token=${resetToken}`;
   
   const mailOptions = {
     from: '"TrafficStars" <adshark00@gmail.com>',
